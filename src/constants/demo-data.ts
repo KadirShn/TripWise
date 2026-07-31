@@ -1,0 +1,203 @@
+import type { Expense, ItineraryItem, Trip, TripMember } from '@/types/domain';
+
+export const DEMO_USER_ID = '00000000-0000-4000-8000-000000000001';
+export const DEMO_TRIP_ID = '10000000-0000-4000-8000-000000000001';
+const M1 = '20000000-0000-4000-8000-000000000001';
+const M2 = '20000000-0000-4000-8000-000000000002';
+const M3 = '20000000-0000-4000-8000-000000000003';
+const CREATED = '2026-07-20T10:00:00.000Z';
+
+export const demoTrips: Trip[] = [
+  {
+    id: DEMO_TRIP_ID,
+    ownerId: DEMO_USER_ID,
+    title: 'Kapadokya Kaçamağı',
+    destination: 'Nevşehir',
+    startDate: '2026-09-12',
+    endDate: '2026-09-15',
+    baseCurrency: 'TRY',
+    budgetAmountMinor: 1800000,
+    coverEmoji: '🎈',
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+];
+
+export const demoMembers: TripMember[] = [
+  {
+    id: M1,
+    tripId: DEMO_TRIP_ID,
+    userId: DEMO_USER_ID,
+    displayName: 'Deniz',
+    email: 'deniz@example.com',
+    role: 'owner',
+    createdAt: CREATED,
+  },
+  {
+    id: M2,
+    tripId: DEMO_TRIP_ID,
+    userId: null,
+    displayName: 'Ece',
+    email: 'ece@example.com',
+    role: 'editor',
+    createdAt: CREATED,
+  },
+  {
+    id: M3,
+    tripId: DEMO_TRIP_ID,
+    userId: null,
+    displayName: 'Mert',
+    email: null,
+    role: 'editor',
+    createdAt: CREATED,
+  },
+];
+
+export const demoExpenses: Expense[] = [
+  {
+    id: '30000000-0000-4000-8000-000000000001',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    paidByMemberId: M1,
+    title: 'Taş otel',
+    notes: 'Üç gecelik konaklama',
+    category: 'accommodation',
+    amountMinor: 780000,
+    currency: 'TRY',
+    exchangeRateMillionths: 1000000,
+    expenseDate: '2026-09-12',
+    splitMethod: 'equal',
+    splits: [M1, M2, M3].map((memberId, index) => ({
+      id: `31000000-0000-4000-8000-00000000000${index + 1}`,
+      expenseId: '30000000-0000-4000-8000-000000000001',
+      memberId,
+      shareMinor: 260000,
+      percentageBasisPoints: null,
+    })),
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000002',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    paidByMemberId: M2,
+    title: 'Akşam yemeği',
+    notes: 'Testi kebabı ve içecekler',
+    category: 'food',
+    amountMinor: 245000,
+    currency: 'TRY',
+    exchangeRateMillionths: 1000000,
+    expenseDate: '2026-09-12',
+    splitMethod: 'exact',
+    splits: [
+      {
+        id: '32000000-0000-4000-8000-000000000001',
+        expenseId: '30000000-0000-4000-8000-000000000002',
+        memberId: M1,
+        shareMinor: 100000,
+        percentageBasisPoints: null,
+      },
+      {
+        id: '32000000-0000-4000-8000-000000000002',
+        expenseId: '30000000-0000-4000-8000-000000000002',
+        memberId: M2,
+        shareMinor: 85000,
+        percentageBasisPoints: null,
+      },
+      {
+        id: '32000000-0000-4000-8000-000000000003',
+        expenseId: '30000000-0000-4000-8000-000000000002',
+        memberId: M3,
+        shareMinor: 60000,
+        percentageBasisPoints: null,
+      },
+    ],
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000003',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    paidByMemberId: M3,
+    title: 'Balon turu',
+    notes: null,
+    category: 'activity',
+    amountMinor: 360000,
+    currency: 'TRY',
+    exchangeRateMillionths: 1000000,
+    expenseDate: '2026-09-13',
+    splitMethod: 'percentage',
+    splits: [
+      {
+        id: '33000000-0000-4000-8000-000000000001',
+        expenseId: '30000000-0000-4000-8000-000000000003',
+        memberId: M1,
+        shareMinor: 180000,
+        percentageBasisPoints: 5000,
+      },
+      {
+        id: '33000000-0000-4000-8000-000000000002',
+        expenseId: '30000000-0000-4000-8000-000000000003',
+        memberId: M2,
+        shareMinor: 90000,
+        percentageBasisPoints: 2500,
+      },
+      {
+        id: '33000000-0000-4000-8000-000000000003',
+        expenseId: '30000000-0000-4000-8000-000000000003',
+        memberId: M3,
+        shareMinor: 90000,
+        percentageBasisPoints: 2500,
+      },
+    ],
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+];
+
+export const demoItineraryItems: ItineraryItem[] = [
+  {
+    id: '40000000-0000-4000-8000-000000000001',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    title: 'Otele yerleşme',
+    notes: 'Resepsiyonda Deniz adına rezervasyon',
+    locationName: 'Göreme',
+    startsAt: '2026-09-12T14:00:00+03:00',
+    endsAt: '2026-09-12T15:00:00+03:00',
+    estimatedCostMinor: null,
+    sortOrder: 0,
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000002',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    title: 'Gün doğumu balon turu',
+    notes: 'Servis 04.45’te otelden alacak',
+    locationName: 'Göreme Kalkış Alanı',
+    startsAt: '2026-09-13T05:15:00+03:00',
+    endsAt: '2026-09-13T07:30:00+03:00',
+    estimatedCostMinor: 360000,
+    sortOrder: 0,
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000003',
+    tripId: DEMO_TRIP_ID,
+    createdBy: DEMO_USER_ID,
+    title: 'Ihlara Vadisi yürüyüşü',
+    notes: 'Rahat ayakkabı ve su al',
+    locationName: 'Ihlara Vadisi',
+    startsAt: '2026-09-14T10:00:00+03:00',
+    endsAt: '2026-09-14T15:00:00+03:00',
+    estimatedCostMinor: 45000,
+    sortOrder: 0,
+    createdAt: CREATED,
+    updatedAt: CREATED,
+  },
+];

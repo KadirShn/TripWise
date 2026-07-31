@@ -1,0 +1,2 @@
+-- Guest/demo data is deliberately local-only and is seeded by src/constants/demo-data.ts.
+-- Add project-specific authenticated fixtures here for local Supabase development if needed.
