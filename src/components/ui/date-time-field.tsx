@@ -26,6 +26,37 @@ const parseValue = (value?: string, fallback = new Date()) => {
   return isValid(parsed) ? parsed : fallback;
 };
 
+export const openAndroidDateTimePicker = ({
+  value,
+  minimumDate,
+  maximumDate,
+  onChange,
+}: {
+  value: Date;
+  minimumDate?: Date;
+  maximumDate?: Date;
+  onChange: (date: Date) => void;
+}) => {
+  DateTimePickerAndroid.open({
+    value,
+    mode: 'date',
+    minimumDate,
+    maximumDate,
+    onValueChange: (_dateEvent, pickedDate) => {
+      DateTimePickerAndroid.open({
+        value: pickedDate,
+        mode: 'time',
+        is24Hour: true,
+        onValueChange: (_timeEvent, pickedTime) => {
+          const result = new Date(pickedDate);
+          result.setHours(pickedTime.getHours(), pickedTime.getMinutes(), 0, 0);
+          onChange(result);
+        },
+      });
+    },
+  });
+};
+
 export function DateTimeField({
   label,
   value,
@@ -48,26 +79,13 @@ export function DateTimeField({
     : t('common.selectDateTime');
 
   const commit = (date: Date) => onChangeText?.(date.toISOString());
-  const openAndroidPicker = () => {
-    DateTimePickerAndroid.open({
+  const openAndroidPicker = () =>
+    openAndroidDateTimePicker({
       value: selectedDate,
-      mode: 'date',
       minimumDate,
       maximumDate,
-      onValueChange: (_dateEvent, pickedDate) => {
-        DateTimePickerAndroid.open({
-          value: pickedDate,
-          mode: 'time',
-          is24Hour: true,
-          onValueChange: (_timeEvent, pickedTime) => {
-            const result = new Date(pickedDate);
-            result.setHours(pickedTime.getHours(), pickedTime.getMinutes(), 0, 0);
-            commit(result);
-          },
-        });
-      },
+      onChange: commit,
     });
-  };
   const openPicker = () => {
     if (disabled) return;
     if (process.env.EXPO_OS === 'android') {

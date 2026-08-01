@@ -44,6 +44,19 @@ export const tr = {
     resetDescription: 'Sıfırlama bağlantısını göndereceğimiz e-posta adresini yaz.',
     sendReset: 'Bağlantı gönder',
     resetSent: 'Şifre sıfırlama bağlantısı gönderildi.',
+    newPasswordTitle: 'Yeni şifre oluştur',
+    newPasswordDescription: 'Hesabın için en az 8 karakterli yeni bir şifre belirle.',
+    newPassword: 'Yeni şifre',
+    confirmPassword: 'Yeni şifreyi doğrula',
+    passwordRequirements: 'Şifre en az 8 karakter olmalıdır.',
+    passwordMismatch: 'Şifreler birbiriyle eşleşmiyor.',
+    updatePassword: 'Şifreyi güncelle',
+    recoveryPreparing: 'Güvenli şifre yenileme oturumu hazırlanıyor…',
+    recoveryInvalid: 'Bu bağlantının süresi dolmuş veya bağlantı geçersiz.',
+    sendNewResetLink: 'Yeni bağlantı iste',
+    checkEmailTitle: 'E-postanı kontrol et',
+    checkEmailDescription: 'Hesabını etkinleştirmek için gönderdiğimiz doğrulama bağlantısını aç.',
+    backToSignIn: 'Giriş ekranına dön',
     missingConfig:
       'Supabase yapılandırılmadığı için hesap girişi kapalı. Demo modu tamamen kullanılabilir.',
     invalidCredentials: 'E-posta veya şifre hatalı.',
@@ -51,6 +64,9 @@ export const tr = {
     deleteAccount: 'Hesabımı sil',
     deleteAccountInfo:
       'Hesap silme talebi için destek kanalı ve sunucu fonksiyonu Supabase kurulum notlarında açıklanır.',
+    deleteAccountTitle: 'Hesap kalıcı olarak silinsin mi?',
+    deleteAccountWarning: 'Gezilerin ve hesabın kalıcı olarak silinir. Bu işlem geri alınamaz.',
+    deleteAccountError: 'Hesap silinemedi. Bağlantını kontrol edip tekrar dene.',
   },
   demo: {
     badge: 'Demo modu',
@@ -127,6 +143,8 @@ export const tr = {
     include: 'Dahil',
     share: 'Pay',
     percent: 'Yüzde',
+    shareFor: '{{name}} için pay',
+    percentFor: '{{name}} için yüzde',
     totalMismatch: 'Payların toplamı harcama tutarına eşit olmalı.',
     percentageMismatch: 'Yüzdelerin toplamı %100 olmalı.',
     selectParticipant: 'En az bir katılımcı seç.',
@@ -171,6 +189,9 @@ export const tr = {
     totalSpent: 'Toplam harcama',
     nextPlan: 'Sıradaki plan',
     noPlan: 'Yaklaşan plan yok',
+    upcomingTrip: 'Sıradaki gezi',
+    noUpcomingTrip: 'Yaklaşan gezi yok',
+    planTrip: '{{trip}} gezisinde',
   },
   settings: {
     title: 'Ayarlar',
@@ -186,12 +207,101 @@ export const tr = {
     language: 'Dil',
     turkish: 'Türkçe',
     english: 'English',
+    localSignOutTitle: 'Bu cihazdan çıkış yapıldı',
+    localSignOutDescription:
+      'Bağlantı kurulamadığı için diğer cihazlardaki oturumlar kapatılamadı.',
+  },
+  legal: {
+    privacyTitle: 'Gizlilik Politikası',
+    privacyIntro:
+      'TripWise, seyahat planlarını ve ortak harcamaları yönetirken verilerin üzerinde kontrol sahibi olmanı amaçlar.',
+    lastUpdated: 'Son güncelleme: {{date}}',
+    lastUpdatedValue: '1 Ağustos 2026',
+    sections: {
+      data: {
+        title: 'Topladığımız veriler',
+        body: 'Hesap kullanırsan e-posta adresin, görünen adın ve kullanıcı kimliğin; oluşturduğun gezi, tarih, varış noktası, katılımcı, harcama, bölüşüm ve rota bilgileri işlenir. Tema, dil ve geçici önbellek tercihleri cihazında saklanabilir.',
+      },
+      guest: {
+        title: 'Demo modu',
+        body: 'Demo modundaki gezi verileri yalnızca cihazındaki yerel depolamada tutulur ve Supabase hesabına gönderilmez. Demo verisini Ayarlar veya hesap silme sayfasından sıfırlayabilirsin.',
+      },
+      usage: {
+        title: 'Verileri neden kullanıyoruz?',
+        body: 'Verileri hesabını çalıştırmak, gezilerini göstermek, harcamaları doğru bölüştürmek, bakiyeleri hesaplamak, rotanı saklamak, çevrimdışı önbellek sağlamak ve güvenlik sorunlarını önlemek için kullanırız.',
+      },
+      sharing: {
+        title: 'Paylaşım ve satış',
+        body: 'TripWise kişisel verilerini satmaz ve reklam profili oluşturmaz. Kimlik doğrulama ve veritabanı hizmeti için Supabase altyapısı kullanılır. Veriler yalnızca hizmetin çalışması, yasal zorunluluk veya güvenliğin korunması için gerekli olduğu ölçüde işlenir.',
+      },
+      storage: {
+        title: 'Saklama ve güvenlik',
+        body: 'Hesap verileri Supabase üzerinde saklanır ve satır düzeyi güvenlik politikalarıyla sınırlandırılır. Mobil uygulama yalnızca publishable/anon anahtar kullanır; service-role anahtarı uygulamaya konulmaz. Çevrimdışı kullanım için bazı veriler cihazında önbelleğe alınabilir.',
+      },
+      retention: {
+        title: 'Saklama süresi ve silme',
+        body: 'Hesap verilerin hesabın açık olduğu sürece saklanır. Uygulama içindeki Hesabımı Sil işlemi kullanıcı hesabını ve ona bağlı gezi verilerini kalıcı olarak siler. Yerel önbellek çıkış ve silme sırasında temizlenir.',
+      },
+      rights: {
+        title: 'Tercihlerin ve hakların',
+        body: 'Uygulama içinden verilerini görüntüleyebilir, düzeltebilir ve silebilirsin. Hesabının tamamını hesap silme sayfasından kaldırabilirsin. Başka bir talebin varsa mağaza listelemesindeki geliştirici iletişim kanalını kullanabilirsin.',
+      },
+      children: {
+        title: 'Çocukların gizliliği',
+        body: 'TripWise özellikle 13 yaşın altındaki çocuklara yönelik değildir ve bilerek çocuklardan kişisel veri toplamayı amaçlamaz.',
+      },
+      changes: {
+        title: 'Politika değişiklikleri',
+        body: 'Uygulamanın veri işleme biçimi değişirse bu politika güncellenir ve önemli değişiklikler uygulama içinde veya mağaza açıklamasında duyurulur.',
+      },
+      contact: {
+        title: 'İletişim',
+        body: 'Gizlilik ve veri silme talepleri için uygulama mağazası listelemesinde yayımlanan TripWise geliştirici iletişim adresini kullanabilirsin.',
+      },
+    },
+    deleteTitle: 'Hesap ve verileri silme',
+    deleteIntro:
+      'Bu sayfa hem çevrimiçi TripWise hesabını hem de cihazdaki demo verisini güvenli biçimde kaldırmana yardımcı olur.',
+    deleteConsequencesTitle: 'Silindiğinde ne olur?',
+    deleteConsequences: {
+      account: 'Hesabın ve profil bilgilerin kalıcı olarak silinir.',
+      trips:
+        'Sahibi olduğun geziler ile bağlı katılımcı, harcama, bölüşüm ve rota kayıtları silinir.',
+      local: 'Bu cihazdaki kullanıcıya özel önbellek ve oturum bilgileri temizlenir.',
+    },
+    authenticatedTitle: 'Giriş yapılmış hesap',
+    authenticatedBody:
+      '{{email}} hesabını silmek üzeresin. İşlem tamamlandıktan sonra bu hesapla tekrar giriş yapamazsın.',
+    signedOutTitle: 'Önce hesabına giriş yap',
+    signedOutBody:
+      'Silme isteğinin hesabın sahibinden geldiğini doğrulamak için giriş yapman gerekir. Girişten sonra Ayarlar > Hesap ve verileri silme yolunu tekrar aç.',
+    demoTitle: 'Bu cihazdaki demo verisi',
+    demoBody:
+      'Demo modunda çevrimiçi bir kullanıcı hesabı bulunmaz. Aşağıdaki işlem örnek geziyi ve yaptığın yerel değişiklikleri sıfırlar.',
+    deleteConfirmationTitle: 'Hesap kalıcı olarak silinsin mi?',
+    deleteConfirmationBody:
+      'Bu işlem geri alınamaz. Hesabın ve ona bağlı gezi verileri kalıcı olarak silinecek.',
+    deleteAction: 'Hesabımı kalıcı olarak sil',
+    deleteSuccessTitle: 'Hesabın silindi',
+    deleteSuccessBody:
+      'Hesap ve bağlı veriler kaldırıldı; bu cihazdaki oturum ve kullanıcı önbelleği temizlendi.',
+    goToSignIn: 'Giriş ekranına dön',
+    deleteDemoTitle: 'Demo verisi sıfırlansın mı?',
+    deleteDemoBody:
+      'Bu cihazda yaptığın demo değişiklikleri silinir ve örnek gezi yeniden oluşturulur.',
+    deleteDemoAction: 'Demo verisini sıfırla',
+    deleteDemoSuccessTitle: 'Demo verisi sıfırlandı',
+    deleteDemoSuccessBody: 'Yerel değişiklikler kaldırıldı ve örnek gezi ilk haline getirildi.',
+    openPrivacy: 'Gizlilik politikasını oku',
   },
   status: {
     offline:
       'Çevrimdışısın. Önbellekteki veriler gösteriliyor; sunucu değişiklikleri bağlantı gelene kadar kapalı.',
     notFound: 'Aradığın içerik bulunamadı.',
     goHome: 'Gezilere dön',
+    offlineMutation:
+      'Çevrimdışıyken bu değişiklik kaydedilemez. Girdiğin bilgiler korunuyor; bağlantı geldiğinde tekrar dene.',
+    dataLoadError: 'Gezi verileri yüklenemedi. Önbelleği veya bağlantını kontrol edip tekrar dene.',
   },
 };
 
@@ -240,6 +350,19 @@ export const en: typeof tr = {
     resetDescription: 'Enter the email address where we should send the reset link.',
     sendReset: 'Send link',
     resetSent: 'Password reset link sent.',
+    newPasswordTitle: 'Create a new password',
+    newPasswordDescription: 'Choose a new password with at least 8 characters.',
+    newPassword: 'New password',
+    confirmPassword: 'Confirm new password',
+    passwordRequirements: 'The password must be at least 8 characters.',
+    passwordMismatch: 'The passwords do not match.',
+    updatePassword: 'Update password',
+    recoveryPreparing: 'Preparing a secure password recovery session…',
+    recoveryInvalid: 'This recovery link is invalid or has expired.',
+    sendNewResetLink: 'Request a new link',
+    checkEmailTitle: 'Check your email',
+    checkEmailDescription: 'Open the confirmation link we sent to activate your account.',
+    backToSignIn: 'Back to sign in',
     missingConfig:
       'Account sign-in is disabled because Supabase is not configured. Demo mode is fully available.',
     invalidCredentials: 'Email or password is incorrect.',
@@ -247,6 +370,10 @@ export const en: typeof tr = {
     deleteAccount: 'Delete my account',
     deleteAccountInfo:
       'The support channel and server function for account deletion are described in the Supabase setup notes.',
+    deleteAccountTitle: 'Permanently delete account?',
+    deleteAccountWarning:
+      'Your trips and account will be permanently deleted. This cannot be undone.',
+    deleteAccountError: 'The account could not be deleted. Check your connection and try again.',
   },
   demo: {
     badge: 'Demo mode',
@@ -324,6 +451,8 @@ export const en: typeof tr = {
     include: 'Include',
     share: 'Share',
     percent: 'Percent',
+    shareFor: 'Share for {{name}}',
+    percentFor: 'Percent for {{name}}',
     totalMismatch: 'Shares must equal the expense amount.',
     percentageMismatch: 'Percentages must total 100%.',
     selectParticipant: 'Select at least one participant.',
@@ -368,6 +497,9 @@ export const en: typeof tr = {
     totalSpent: 'Total spent',
     nextPlan: 'Next plan',
     noPlan: 'No upcoming plan',
+    upcomingTrip: 'Upcoming trip',
+    noUpcomingTrip: 'No upcoming trip',
+    planTrip: 'In {{trip}}',
   },
   settings: {
     title: 'Settings',
@@ -383,11 +515,99 @@ export const en: typeof tr = {
     language: 'Language',
     turkish: 'Türkçe',
     english: 'English',
+    localSignOutTitle: 'Signed out on this device',
+    localSignOutDescription:
+      'Other device sessions could not be closed because the server was unreachable.',
+  },
+  legal: {
+    privacyTitle: 'Privacy Policy',
+    privacyIntro:
+      'TripWise is designed to keep you in control of your data while managing travel plans and shared expenses.',
+    lastUpdated: 'Last updated: {{date}}',
+    lastUpdatedValue: 'August 1, 2026',
+    sections: {
+      data: {
+        title: 'Data we collect',
+        body: 'When you use an account, we process your email address, display name, user ID, and the trips, dates, destinations, participants, expenses, splits, and itinerary details you create. Theme, language, and temporary cache preferences may be stored on your device.',
+      },
+      guest: {
+        title: 'Demo mode',
+        body: 'Trip data in demo mode remains in local storage on your device and is not sent to a Supabase account. You can reset demo data from Settings or the account deletion page.',
+      },
+      usage: {
+        title: 'Why we use data',
+        body: 'We use data to operate your account, display trips, split expenses accurately, calculate balances, store itineraries, provide offline caching, and prevent security issues.',
+      },
+      sharing: {
+        title: 'Sharing and sale',
+        body: 'TripWise does not sell personal data or build advertising profiles. Supabase infrastructure provides authentication and database services. Data is processed only as needed to operate the service, meet legal obligations, or protect security.',
+      },
+      storage: {
+        title: 'Storage and security',
+        body: 'Account data is stored with Supabase and restricted by Row Level Security policies. The mobile app uses only a publishable/anon key; the service-role key is never embedded in the app. Some data may be cached on your device for offline use.',
+      },
+      retention: {
+        title: 'Retention and deletion',
+        body: 'Account data is retained while your account remains active. The in-app Delete Account action permanently removes the user account and associated trip data. Local user cache is cleared during sign-out and deletion.',
+      },
+      rights: {
+        title: 'Your choices and rights',
+        body: 'You can view, correct, and delete your data in the app. You can remove your entire account from the account deletion page. For other requests, use the developer contact channel published in the app store listing.',
+      },
+      children: {
+        title: "Children's privacy",
+        body: 'TripWise is not directed specifically to children under 13 and does not intentionally seek to collect personal data from children.',
+      },
+      changes: {
+        title: 'Policy changes',
+        body: 'This policy will be updated if the app changes how it processes data. Material changes will be announced in the app or store listing.',
+      },
+      contact: {
+        title: 'Contact',
+        body: 'For privacy and data deletion requests, use the TripWise developer contact address published in the app store listing.',
+      },
+    },
+    deleteTitle: 'Delete account and data',
+    deleteIntro:
+      'This page helps you safely remove either an online TripWise account or local demo data on this device.',
+    deleteConsequencesTitle: 'What will be deleted?',
+    deleteConsequences: {
+      account: 'Your account and profile information are permanently deleted.',
+      trips:
+        'Trips you own and their participants, expenses, splits, and itinerary records are deleted.',
+      local: 'User-specific cache and session information on this device are cleared.',
+    },
+    authenticatedTitle: 'Signed-in account',
+    authenticatedBody:
+      'You are about to delete {{email}}. You will not be able to sign in with this account after completion.',
+    signedOutTitle: 'Sign in first',
+    signedOutBody:
+      'You must sign in so we can verify that the deletion request comes from the account owner. After signing in, reopen Settings > Delete account and data.',
+    demoTitle: 'Demo data on this device',
+    demoBody:
+      'Demo mode has no online user account. The action below resets the sample trip and removes your local demo changes.',
+    deleteConfirmationTitle: 'Permanently delete this account?',
+    deleteConfirmationBody:
+      'This cannot be undone. The account and its associated trip data will be permanently deleted.',
+    deleteAction: 'Permanently delete my account',
+    deleteSuccessTitle: 'Account deleted',
+    deleteSuccessBody:
+      'The account and associated data were removed, and the session and user cache on this device were cleared.',
+    goToSignIn: 'Back to sign in',
+    deleteDemoTitle: 'Reset demo data?',
+    deleteDemoBody: 'Local demo changes will be removed and the sample trip will be recreated.',
+    deleteDemoAction: 'Reset demo data',
+    deleteDemoSuccessTitle: 'Demo data reset',
+    deleteDemoSuccessBody: 'Local changes were removed and the sample trip was restored.',
+    openPrivacy: 'Read the privacy policy',
   },
   status: {
     offline:
       'You are offline. Cached data is shown; server changes are disabled until you reconnect.',
     notFound: 'The content could not be found.',
     goHome: 'Back to trips',
+    offlineMutation:
+      'This change cannot be saved while offline. Your input is preserved; try again when connected.',
+    dataLoadError: 'Trip data could not be loaded. Check the cache or connection and try again.',
   },
 };

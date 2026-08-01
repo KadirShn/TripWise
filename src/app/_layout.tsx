@@ -1,10 +1,12 @@
-import '@/lib/i18n';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 import { AuthProvider } from '@/features/auth/auth-provider';
+import { i18n } from '@/lib/i18n';
 import { QueryProvider } from '@/lib/query/query-provider';
+import { useAppStore } from '@/stores/app-store';
 import { useAppTheme } from '@/theme/use-app-theme';
 
 export { ErrorBoundary } from '@/components/root-error-boundary';
@@ -12,6 +14,10 @@ export { ErrorBoundary } from '@/components/root-error-boundary';
 export default function RootLayout() {
   const { isDark, colors } = useAppTheme();
   const { t } = useTranslation();
+  const language = useAppStore((state) => state.language);
+  useEffect(() => {
+    if (i18n.language !== language) void i18n.changeLanguage(language);
+  }, [language]);
   return (
     <QueryProvider>
       <AuthProvider>
@@ -28,6 +34,12 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="reset-password"
+              options={{ title: t('auth.newPasswordTitle'), headerBackVisible: false }}
+            />
+            <Stack.Screen name="privacy" options={{ title: t('legal.privacyTitle') }} />
+            <Stack.Screen name="delete-account" options={{ title: t('legal.deleteTitle') }} />
             <Stack.Screen
               name="trip/new"
               options={{ presentation: 'modal', title: t('trips.formNew') }}

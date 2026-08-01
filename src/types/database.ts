@@ -179,7 +179,16 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      prepare_account_deletion: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      upsert_expense_with_splits: {
+        Args: { p_expense: Json; p_splits: Json };
+        Returns: string;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

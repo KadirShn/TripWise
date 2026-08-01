@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { differenceInCalendarDays, format } from 'date-fns';
-import { tr as trLocale, enUS } from 'date-fns/locale';
+import { differenceInCalendarDays } from 'date-fns';
 import { Link, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
@@ -17,6 +16,8 @@ import {
 import { useTripData } from '@/features/data/use-trip-data';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
+import { formatShortDate } from '@/utils/dates/format';
+import { TripCoverEmoji } from './trip-cover-emoji';
 
 export function TripsScreen() {
   const { t, i18n } = useTranslation();
@@ -77,7 +78,7 @@ export function TripsScreen() {
                 <Pressable>
                   <Card style={{ overflow: 'hidden' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-                      <AppText style={{ fontSize: 38 }}>{trip.coverEmoji}</AppText>
+                      <TripCoverEmoji emoji={trip.coverEmoji} />
                       <View style={{ flex: 1, gap: 2 }}>
                         <AppText variant="subtitle">{trip.title}</AppText>
                         <AppText style={{ color: colors.textMuted }}>{trip.destination}</AppText>
@@ -98,10 +99,8 @@ export function TripsScreen() {
                     >
                       <View>
                         <AppText variant="caption" style={{ color: colors.textMuted }}>
-                          {format(new Date(`${trip.startDate}T00:00:00`), 'd MMM', {
-                            locale: i18n.language === 'tr' ? trLocale : enUS,
-                          })}{' '}
-                          · {t('trips.days', { count: days })}
+                          {formatShortDate(trip.startDate, i18n.language)} ·{' '}
+                          {t('trips.days', { count: days })}
                         </AppText>
                       </View>
                       <MoneyText

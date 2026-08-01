@@ -4,22 +4,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
 import { z } from 'zod';
-import {
-  AppText,
-  Avatar,
-  Button,
-  Card,
-  DateField,
-  Screen,
-  SelectField,
-  TextField,
-} from '@/components/ui';
+import { AppText, Button, DateField, Screen, SelectField, TextField } from '@/components/ui';
 import { DEMO_USER_ID } from '@/constants/demo-data';
+import { getTripDataErrorKey } from '@/features/data/errors';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { useTripData } from '@/features/data/use-trip-data';
 import type { ExpenseCategory, SplitMethod } from '@/types/domain';
-import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 import {
   getCurrencyFractionDigits,
@@ -27,6 +18,7 @@ import {
   parsePercentageToBasisPoints,
 } from '@/utils/money/money';
 import { splitByPercentage, splitEqually, validateExactSplit } from '@/utils/money/splits';
+import { ExpenseSplitFields } from './expense-split-fields';
 
 const schema = z.object({
   title: z.string().trim().min(2),
@@ -187,10 +179,12 @@ export function ExpenseFormScreen() {
         updatedAt: timestamp,
       });
       router.back();
-    } catch {
-      setError('root', { message: t('auth.genericError') });
+    } catch (error) {
+      setError('root', { message: t(getTripDataErrorKey(error)) });
     }
   });
+  if (data.isLoading) return <TripDataLoadingScreen />;
+  if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   if (!trip) return null;
   return (
     <Screen>
@@ -299,66 +293,20 @@ export function ExpenseFormScreen() {
           { value: 'percentage', label: t('expenses.percentage') },
         ]}
       />
-      <Card>
-        <AppText variant="subtitle">{t('dashboard.participants')}</AppText>
-        {members.map((member) => {
-          const active = selected.includes(member.id);
-          return (
-            <View key={member.id} style={{ gap: spacing.sm }}>
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: active }}
-                onPress={() => toggle(member.id)}
-                style={{
-                  minHeight: 48,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.md,
-                }}
-              >
-                <Avatar name={member.displayName} size={36} />
-                <AppText variant="label" style={{ flex: 1 }}>
-                  {member.displayName}
-                </AppText>
-                <View
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 8,
-                    borderWidth: 2,
-                    borderColor: active ? colors.primary : colors.border,
-                    backgroundColor: active ? colors.primary : 'transparent',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {active ? <AppText style={{ color: colors.onPrimary }}>✓</AppText> : null}
-                </View>
-              </Pressable>
-              {active && method === 'exact' ? (
-                <TextField
-                  label={t('expenses.share')}
-                  value={exactValues[member.id] ?? ''}
-                  onChangeText={(value) =>
-                    setExactValues((current) => ({ ...current, [member.id]: value }))
-                  }
-                  keyboardType="decimal-pad"
-                />
-              ) : null}
-              {active && method === 'percentage' ? (
-                <TextField
-                  label={t('expenses.percent')}
-                  value={percentValues[member.id] ?? ''}
-                  onChangeText={(value) =>
-                    setPercentValues((current) => ({ ...current, [member.id]: value }))
-                  }
-                  keyboardType="decimal-pad"
-                />
-              ) : null}
-            </View>
-          );
-        })}
-      </Card>
+      <ExpenseSplitFields
+        members={members}
+        method={method}
+        selected={selected}
+        exactValues={exactValues}
+        percentValues={percentValues}
+        onToggle={toggle}
+        onExactChange={(memberId, value) =>
+          setExactValues((current) => ({ ...current, [memberId]: value }))
+        }
+        onPercentChange={(memberId, value) =>
+          setPercentValues((current) => ({ ...current, [memberId]: value }))
+        }
+      />
       <Controller
         control={control}
         name="notes"

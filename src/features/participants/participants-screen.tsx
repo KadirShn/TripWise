@@ -17,6 +17,8 @@ import {
   TextField,
 } from '@/components/ui';
 import { useTripData } from '@/features/data/use-trip-data';
+import { getTripDataErrorKey } from '@/features/data/errors';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import type { MemberRole, TripMember } from '@/types/domain';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
@@ -35,6 +37,7 @@ export function ParticipantsScreen() {
   const members = data.members.filter((member) => member.tripId === tripId);
   const { addMember: add, updateMember: update, deleteMember: remove } = data;
   const [editing, setEditing] = useState<TripMember | 'new' | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -69,8 +72,8 @@ export function ParticipantsScreen() {
       if (editing !== 'new' && editing) await update(editing.id, input);
       else await add(input);
       setEditing(null);
-    } catch {
-      setError('root', { message: t('auth.genericError') });
+    } catch (error) {
+      setError('root', { message: t(getTripDataErrorKey(error)) });
     }
   });
   const deleteMember = (member: TripMember) =>
@@ -80,12 +83,23 @@ export function ParticipantsScreen() {
         text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          void remove(member.id).catch(() =>
-            Alert.alert(t('common.error'), t('participants.inUse')),
-          );
+          if (deletingId) return;
+          setDeletingId(member.id);
+          void remove(member.id)
+            .catch((error) =>
+              Alert.alert(
+                t('common.error'),
+                error instanceof Error && error.message === 'MEMBER_IN_USE'
+                  ? t('participants.inUse')
+                  : t(getTripDataErrorKey(error)),
+              ),
+            )
+            .finally(() => setDeletingId(null));
         },
       },
     ]);
+  if (data.isLoading) return <TripDataLoadingScreen />;
+  if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
       <Button
@@ -144,6 +158,7 @@ export function ParticipantsScreen() {
               style={{ flex: 1 }}
               variant="ghost"
               label={t('common.cancel')}
+              disabled={isSubmitting}
               onPress={() => setEditing(null)}
             />
             <Button
@@ -153,6 +168,9 @@ export function ParticipantsScreen() {
               onPress={() => void submit()}
             />
           </View>
+          {errors.root?.message ? (
+            <AppText style={{ color: colors.danger }}>{errors.root.message}</AppText>
+          ) : null}
         </Card>
       ) : null}
       {members.length === 0 ? (
@@ -162,6 +180,7 @@ export function ParticipantsScreen() {
           <Pressable
             key={member.id}
             accessibilityRole="button"
+            disabled={deletingId !== null}
             onPress={() => member.role !== 'owner' && open(member)}
           >
             <Card>
@@ -181,7 +200,11 @@ export function ParticipantsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={t('common.delete')}
                     hitSlop={8}
-                    onPress={() => deleteMember(member)}
+                    disabled={deletingId !== null}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      deleteMember(member);
+                    }}
                     style={{
                       width: 44,
                       height: 44,
@@ -192,7 +215,7 @@ export function ParticipantsScreen() {
                     <MaterialCommunityIcons
                       name="trash-can-outline"
                       size={22}
-                      color={colors.danger}
+                      color={deletingId === member.id ? colors.textMuted : colors.danger}
                     />
                   </Pressable>
                 ) : null}

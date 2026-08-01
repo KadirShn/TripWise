@@ -1,4 +1,3 @@
-import 'expo-sqlite/localStorage/install';
 import { randomUUID } from 'expo-crypto';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -11,8 +10,10 @@ import {
 } from '@/constants/demo-data';
 import type { Expense, Id, ItineraryItem, Trip, TripMember } from '@/types/domain';
 import type { ThemePreference } from '@/theme/theme';
+import { appLocalStorage } from '@/lib/storage/local-storage';
 
 type AppMode = 'none' | 'guest' | 'authenticated';
+export type AppLanguage = 'tr' | 'en';
 type NewTrip = Omit<Trip, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>;
 type NewMember = Omit<TripMember, 'id' | 'createdAt'>;
 type NewItinerary = Omit<ItineraryItem, 'id' | 'createdAt' | 'updatedAt'>;
@@ -22,6 +23,7 @@ interface AppState {
   onboardingCompleted: boolean;
   mode: AppMode;
   themePreference: ThemePreference;
+  language: AppLanguage;
   trips: Trip[];
   members: TripMember[];
   expenses: Expense[];
@@ -32,6 +34,7 @@ interface AppState {
   enterAuthenticated: () => void;
   signOut: () => void;
   setThemePreference: (value: ThemePreference) => void;
+  setLanguage: (value: AppLanguage) => void;
   resetDemo: () => void;
   createTrip: (trip: NewTrip) => Promise<Id>;
   updateTrip: (tripId: Id, patch: Partial<NewTrip>) => Promise<void>;
@@ -64,6 +67,7 @@ export const useAppStore = create<AppState>()(
       onboardingCompleted: false,
       mode: 'none',
       themePreference: 'system',
+      language: 'tr',
       trips: [],
       members: [],
       expenses: [],
@@ -79,6 +83,7 @@ export const useAppStore = create<AppState>()(
             : { mode: 'none' },
         ),
       setThemePreference: (themePreference) => set({ themePreference }),
+      setLanguage: (language) => set({ language }),
       resetDemo: () => set({ ...seed(), mode: 'guest' }),
       createTrip: async (input) => {
         const id = randomUUID();
@@ -180,7 +185,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'tripwise-app-v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => appLocalStorage),
       partialize: ({ hasHydrated: _hasHydrated, ...state }) => state,
       onRehydrateStorage: () => (state) => state?.setHasHydrated(true),
     },

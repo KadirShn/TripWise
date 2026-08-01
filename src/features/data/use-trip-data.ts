@@ -2,6 +2,9 @@ import { randomUUID } from 'expo-crypto';
 import NetInfo from '@react-native-community/netinfo';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DEMO_USER_ID } from '@/constants/demo-data';
+import { useAuth } from '@/features/auth/auth-provider';
+import { TripDataError } from '@/features/data/errors';
+import { remoteSnapshotQueryKey } from '@/lib/query/query-client';
 import {
   addRemoteItinerary,
   addRemoteMember,
@@ -23,16 +26,19 @@ import type { Expense, Id, ItineraryItem, Trip, TripMember } from '@/types/domai
 type NewTrip = Omit<Trip, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>;
 type NewMember = Omit<TripMember, 'id' | 'createdAt'>;
 type NewItinerary = Omit<ItineraryItem, 'id' | 'createdAt' | 'updatedAt'>;
-const queryKey = ['tripwise', 'remote-snapshot'] as const;
 const empty: RemoteSnapshot = { trips: [], members: [], expenses: [], itineraryItems: [] };
 const now = () => new Date().toISOString();
 const ensureOnline = async () => {
   const state = await NetInfo.fetch();
-  if (state.isConnected === false) throw new Error('OFFLINE_MUTATION_DISABLED');
+  if (state.isConnected === false || state.isInternetReachable === false)
+    throw new TripDataError('OFFLINE_MUTATION_DISABLED');
 };
 
 export function useTripData() {
   const mode = useAppStore((state) => state.mode);
+  const { session } = useAuth();
+  const userId = session?.user.id;
+  const queryKey = remoteSnapshotQueryKey(userId ?? 'signed-out');
   const local: RemoteSnapshot = {
     trips: useAppStore((state) => state.trips),
     members: useAppStore((state) => state.members),
@@ -56,7 +62,7 @@ export function useTripData() {
   const query = useQuery({
     queryKey,
     queryFn: fetchRemoteSnapshot,
-    enabled: mode === 'authenticated',
+    enabled: mode === 'authenticated' && Boolean(userId),
   });
   const data = mode === 'authenticated' ? (query.data ?? empty) : local;
   const refresh = async () => {
@@ -65,8 +71,8 @@ export function useTripData() {
 
   return {
     ...data,
-    isLoading: mode === 'authenticated' && query.isLoading,
-    error: query.error,
+    isLoading: mode === 'authenticated' && Boolean(userId) && query.isLoading,
+    error: query.data ? null : query.error,
     refetch: query.refetch,
     createTrip: async (input: NewTrip): Promise<Id> => {
       if (mode !== 'authenticated') return localActions.createTrip(input);

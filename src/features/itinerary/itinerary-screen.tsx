@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { format } from 'date-fns';
 import { useLocalSearchParams } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +17,13 @@ import {
   TextField,
 } from '@/components/ui';
 import { DEMO_USER_ID } from '@/constants/demo-data';
+import { getTripDataErrorKey } from '@/features/data/errors';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { useTripData } from '@/features/data/use-trip-data';
 import type { ItineraryItem } from '@/types/domain';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
+import { calendarDateKey, formatDateOnly, formatTime } from '@/utils/dates/format';
 import { parseMoney } from '@/utils/money/money';
 
 const validDateTime = (value: string) => !Number.isNaN(Date.parse(value));
@@ -49,7 +51,7 @@ const defaultStart = () => {
 };
 export function ItineraryScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
   const data = useTripData();
   const trip = data.trips.find((item) => item.id === tripId);
@@ -58,6 +60,7 @@ export function ItineraryScreen() {
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const { addItineraryItem: add, updateItineraryItem: update, deleteItineraryItem: remove } = data;
   const [editing, setEditing] = useState<ItineraryItem | 'new' | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -120,23 +123,21 @@ export function ItineraryScreen() {
         editing !== 'new' && editing
           ? editing.sortOrder
           : items.filter(
-              (item) =>
-                format(new Date(item.startsAt), 'yyyy-MM-dd') ===
-                format(new Date(values.startsAt), 'yyyy-MM-dd'),
+              (item) => calendarDateKey(item.startsAt) === calendarDateKey(values.startsAt),
             ).length,
     };
     try {
       if (editing !== 'new' && editing) await update(editing.id, input);
       else await add(input);
       setEditing(null);
-    } catch {
-      setError('root', { message: t('auth.genericError') });
+    } catch (error) {
+      setError('root', { message: t(getTripDataErrorKey(error)) });
     }
   });
   const groups = useMemo(
     () =>
       items.reduce<Record<string, ItineraryItem[]>>((result, item) => {
-        const key = format(new Date(item.startsAt), 'yyyy-MM-dd');
+        const key = calendarDateKey(item.startsAt);
         (result[key] ??= []).push(item);
         return result;
       }, {}),
@@ -149,10 +150,16 @@ export function ItineraryScreen() {
         text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          void remove(item.id).catch(() => Alert.alert(t('common.error'), t('auth.genericError')));
+          if (deletingId) return;
+          setDeletingId(item.id);
+          void remove(item.id)
+            .catch((error) => Alert.alert(t('common.error'), t(getTripDataErrorKey(error))))
+            .finally(() => setDeletingId(null));
         },
       },
     ]);
+  if (data.isLoading) return <TripDataLoadingScreen />;
+  if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
       <Button
@@ -244,6 +251,7 @@ export function ItineraryScreen() {
               style={{ flex: 1 }}
               variant="ghost"
               label={t('common.cancel')}
+              disabled={isSubmitting}
               onPress={() => setEditing(null)}
             />
             <Button
@@ -253,6 +261,9 @@ export function ItineraryScreen() {
               onPress={() => void submit()}
             />
           </View>
+          {errors.root?.message ? (
+            <AppText style={{ color: colors.danger }}>{errors.root.message}</AppText>
+          ) : null}
         </Card>
       ) : null}
       {items.length === 0 ? (
@@ -267,16 +278,16 @@ export function ItineraryScreen() {
           <View key={date} style={{ gap: spacing.md }}>
             <AppText variant="title">
               {t('itinerary.dayTitle', {
-                date: format(new Date(`${date}T12:00:00`), 'dd.MM.yyyy'),
+                date: formatDateOnly(date, i18n.language),
               })}
             </AppText>
             {dayItems.map((item) => (
-              <Pressable key={item.id} onPress={() => open(item)}>
+              <Pressable key={item.id} disabled={deletingId !== null} onPress={() => open(item)}>
                 <Card>
                   <View style={{ flexDirection: 'row', gap: spacing.md }}>
                     <View style={{ alignItems: 'center' }}>
                       <AppText variant="label" style={{ color: colors.primary }}>
-                        {format(new Date(item.startsAt), 'HH:mm')}
+                        {formatTime(item.startsAt)}
                       </AppText>
                       <View
                         style={{ width: 2, flex: 1, minHeight: 28, backgroundColor: colors.border }}
@@ -298,7 +309,11 @@ export function ItineraryScreen() {
                     <Pressable
                       accessibilityLabel={t('common.delete')}
                       hitSlop={8}
-                      onPress={() => confirmDelete(item)}
+                      disabled={deletingId !== null}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        confirmDelete(item);
+                      }}
                       style={{
                         width: 44,
                         height: 44,
@@ -309,7 +324,7 @@ export function ItineraryScreen() {
                       <MaterialCommunityIcons
                         name="trash-can-outline"
                         size={21}
-                        color={colors.danger}
+                        color={deletingId === item.id ? colors.textMuted : colors.danger}
                       />
                     </Pressable>
                   </View>

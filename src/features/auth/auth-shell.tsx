@@ -1,8 +1,7 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { PropsWithChildren } from 'react';
 import { View } from 'react-native';
-import { AppText, Screen } from '@/components/ui';
-import { radius, spacing } from '@/theme/theme';
+import { AppText, BrandMark, Screen } from '@/components/ui';
+import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 
 export function AuthShell({
@@ -15,19 +14,10 @@ export function AuthShell({
     <Screen contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 56 }}>
       <View style={{ gap: spacing.xl }}>
         <View style={{ gap: spacing.md, alignItems: 'flex-start' }}>
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: radius.lg,
-              backgroundColor: colors.primary,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <MaterialCommunityIcons name="compass-outline" size={38} color={colors.onPrimary} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <BrandMark size={64} />
+            <AppText variant="display">TripWise</AppText>
           </View>
-          <AppText variant="display">TripWise</AppText>
           <AppText variant="title">{title}</AppText>
           <AppText style={{ color: colors.textMuted }}>{subtitle}</AppText>
         </View>

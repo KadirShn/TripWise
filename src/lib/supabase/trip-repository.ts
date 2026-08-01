@@ -1,4 +1,4 @@
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 import type { Expense, ExpenseCategory, ItineraryItem, Trip, TripMember } from '@/types/domain';
 import { supabase } from './client';
 
@@ -227,40 +227,30 @@ export async function deleteRemoteMember(memberId: string): Promise<void> {
 export async function upsertRemoteExpense(expense: Expense): Promise<Expense> {
   const user = await requireUser();
   const remote = { ...expense, createdBy: user.id };
-  const { error } = await client()
-    .from('expenses')
-    .upsert({
-      id: remote.id,
-      trip_id: remote.tripId,
-      created_by: remote.createdBy,
-      paid_by_member_id: remote.paidByMemberId,
-      title: remote.title,
-      notes: remote.notes,
-      category: remote.category,
-      amount_minor: remote.amountMinor,
-      currency: remote.currency,
-      exchange_rate_to_base: remote.exchangeRateMillionths / 1_000_000,
-      expense_date: remote.expenseDate,
-      split_method: remote.splitMethod,
-    });
+  const expensePayload: Json = {
+    id: remote.id,
+    trip_id: remote.tripId,
+    paid_by_member_id: remote.paidByMemberId,
+    title: remote.title,
+    notes: remote.notes,
+    category: remote.category,
+    amount_minor: remote.amountMinor,
+    currency: remote.currency,
+    exchange_rate_to_base: remote.exchangeRateMillionths / 1_000_000,
+    expense_date: remote.expenseDate,
+    split_method: remote.splitMethod,
+  };
+  const splitPayload: Json = remote.splits.map((split) => ({
+    id: split.id,
+    member_id: split.memberId,
+    share_minor: split.shareMinor,
+    percentage: split.percentageBasisPoints === null ? null : split.percentageBasisPoints / 100,
+  }));
+  const { error } = await client().rpc('upsert_expense_with_splits', {
+    p_expense: expensePayload,
+    p_splits: splitPayload,
+  });
   fail(error);
-  const { error: deleteError } = await client()
-    .from('expense_splits')
-    .delete()
-    .eq('expense_id', remote.id);
-  fail(deleteError);
-  const { error: splitError } = await client()
-    .from('expense_splits')
-    .insert(
-      remote.splits.map((split) => ({
-        id: split.id,
-        expense_id: remote.id,
-        member_id: split.memberId,
-        share_minor: split.shareMinor,
-        percentage: split.percentageBasisPoints === null ? null : split.percentageBasisPoints / 100,
-      })),
-    );
-  fail(splitError);
   return remote;
 }
 export async function deleteRemoteExpense(expenseId: string): Promise<void> {

@@ -3,9 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AppText, Card, EmptyState, MoneyText, ProgressBar, Screen } from '@/components/ui';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import type { ExpenseCategory } from '@/types/domain';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
+import { formatDateOnly } from '@/utils/dates/format';
+import { TripCoverEmoji } from './trip-cover-emoji';
 import { useLocalTrip } from './use-local-trip';
 
 const categoryKeys: ExpenseCategory[] = [
@@ -18,10 +21,12 @@ const categoryKeys: ExpenseCategory[] = [
 ];
 export function TripDashboardScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const bundle = useLocalTrip(tripId);
-  const { t } = useTranslation();
+  const { bundle, isLoading, error, refetch } = useLocalTrip(tripId);
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { colors } = useAppTheme();
+  if (isLoading) return <TripDataLoadingScreen />;
+  if (error) return <TripDataErrorScreen onRetry={() => void refetch()} />;
   if (!bundle)
     return (
       <Screen>
@@ -59,10 +64,11 @@ export function TripDashboardScreen() {
   return (
     <Screen>
       <View style={{ gap: spacing.xs }}>
-        <AppText style={{ fontSize: 46 }}>{trip.coverEmoji}</AppText>
+        <TripCoverEmoji emoji={trip.coverEmoji} size={68} />
         <AppText variant="display">{trip.title}</AppText>
         <AppText style={{ color: colors.textMuted }}>
-          {trip.destination} · {trip.startDate} — {trip.endDate}
+          {trip.destination} · {formatDateOnly(trip.startDate, i18n.language)} —{' '}
+          {formatDateOnly(trip.endDate, i18n.language)}
         </AppText>
       </View>
       <Card>

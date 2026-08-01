@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText, Avatar, Card, MoneyText, Screen } from '@/components/ui';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 import { calculateBalances, simplifySettlements } from '@/utils/settlement/balances';
@@ -10,9 +11,11 @@ import { useLocalTrip } from '@/features/trips/use-local-trip';
 
 export function BalancesScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const bundle = useLocalTrip(tripId);
+  const { bundle, isLoading, error, refetch } = useLocalTrip(tripId);
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  if (isLoading) return <TripDataLoadingScreen />;
+  if (error) return <TripDataErrorScreen onRetry={() => void refetch()} />;
   if (!bundle) return null;
   const balances = calculateBalances(
     bundle.members.map((member) => member.id),

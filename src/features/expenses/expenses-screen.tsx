@@ -4,15 +4,20 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, View } from 'react-native';
 import { AppText, Button, Card, EmptyState, MoneyText, Screen } from '@/components/ui';
 import { useTripData } from '@/features/data/use-trip-data';
+import { getTripDataErrorKey } from '@/features/data/errors';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
+import { formatDateOnly } from '@/utils/dates/format';
+import { useState } from 'react';
 
 export function ExpensesScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { colors } = useAppTheme();
   const data = useTripData();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const expenses = data.expenses
     .filter((expense) => expense.tripId === tripId)
     .sort((a, b) => b.expenseDate.localeCompare(a.expenseDate));
@@ -25,10 +30,16 @@ export function ExpensesScreen() {
         text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          void remove(id).catch(() => Alert.alert(t('common.error'), t('auth.genericError')));
+          if (deletingId) return;
+          setDeletingId(id);
+          void remove(id)
+            .catch((error) => Alert.alert(t('common.error'), t(getTripDataErrorKey(error))))
+            .finally(() => setDeletingId(null));
         },
       },
     ]);
+  if (data.isLoading) return <TripDataLoadingScreen />;
+  if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
       <Button
@@ -49,6 +60,7 @@ export function ExpensesScreen() {
           return (
             <Pressable
               key={expense.id}
+              disabled={deletingId !== null}
               onPress={() => router.push(`/trip/${tripId}/expenses/${expense.id}` as never)}
             >
               <Card>
@@ -72,7 +84,7 @@ export function ExpensesScreen() {
                   <View style={{ flex: 1 }}>
                     <AppText variant="label">{expense.title}</AppText>
                     <AppText variant="caption" style={{ color: colors.textMuted }}>
-                      {expense.expenseDate} ·{' '}
+                      {formatDateOnly(expense.expenseDate, i18n.language)} ·{' '}
                       {t('expenses.paidBy', { name: payer?.displayName ?? '—' })}
                     </AppText>
                   </View>
@@ -89,7 +101,11 @@ export function ExpensesScreen() {
                   <Pressable
                     accessibilityLabel={t('common.delete')}
                     hitSlop={8}
-                    onPress={() => confirm(expense.id, expense.title)}
+                    disabled={deletingId !== null}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      confirm(expense.id, expense.title);
+                    }}
                     style={{
                       width: 44,
                       height: 44,
@@ -100,7 +116,7 @@ export function ExpensesScreen() {
                     <MaterialCommunityIcons
                       name="trash-can-outline"
                       size={21}
-                      color={colors.danger}
+                      color={deletingId === expense.id ? colors.textMuted : colors.danger}
                     />
                   </Pressable>
                 </View>

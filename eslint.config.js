@@ -4,6 +4,12 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['.expo/**', 'dist/**', 'coverage/**', 'tripwise-scaffold/**'],
+    ignores: [
+      '.expo/**',
+      'dist/**',
+      'coverage/**',
+      'tripwise-scaffold/**',
+      'supabase/functions/**',
+    ],
   },
 ]);

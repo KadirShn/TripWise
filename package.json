@@ -65,6 +65,7 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+    "test:rls": "node scripts/verify-supabase-rls.mjs",
     "format:check": "prettier --check ."
   },
   "private": true,

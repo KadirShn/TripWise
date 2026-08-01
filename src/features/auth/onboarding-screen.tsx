@@ -2,9 +2,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { AppText, Badge, Button, Card, Screen } from '@/components/ui';
+import { AppText, Badge, BrandMark, Button, Card, Screen } from '@/components/ui';
 import { useAppStore } from '@/stores/app-store';
-import { radius, spacing } from '@/theme/theme';
+import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 
 export function OnboardingScreen() {
@@ -22,18 +22,9 @@ export function OnboardingScreen() {
       contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', paddingTop: 72 }}
     >
       <View style={{ gap: spacing.xl }}>
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: radius.lg,
-            backgroundColor: colors.primary,
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: [{ rotate: '-4deg' }],
-          }}
-        >
-          <MaterialCommunityIcons name="compass-outline" size={42} color={colors.onPrimary} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <BrandMark size={72} />
+          <AppText variant="title">TripWise</AppText>
         </View>
         <Badge label={t('onboarding.eyebrow')} />
         <AppText variant="display">{t('onboarding.title')}</AppText>

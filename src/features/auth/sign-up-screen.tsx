@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { z } from 'zod';
 import { AppText, Button, TextField } from '@/components/ui';
@@ -23,6 +24,7 @@ export function SignUpScreen() {
   const { colors } = useAppTheme();
   const router = useRouter();
   const { signUp } = useAuth();
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -34,12 +36,21 @@ export function SignUpScreen() {
   });
   const submit = handleSubmit(async (values) => {
     try {
-      await signUp(values.email, values.password, values.displayName);
-      router.replace('/(auth)/sign-in');
+      const result = await signUp(values.email, values.password, values.displayName);
+      if (result.requiresEmailConfirmation) setConfirmationEmail(values.email);
+      else router.replace('/(tabs)/(trips)');
     } catch (error) {
       setError('root', { message: t(`auth.${normalizeAuthError(error)}`) });
     }
   });
+  if (confirmationEmail) {
+    return (
+      <AuthShell title={t('auth.checkEmailTitle')} subtitle={t('auth.checkEmailDescription')}>
+        <AppText style={{ color: colors.textMuted }}>{confirmationEmail}</AppText>
+        <Button label={t('auth.backToSignIn')} onPress={() => router.replace('/(auth)/sign-in')} />
+      </AuthShell>
+    );
+  }
   return (
     <AuthShell title={t('auth.signUp')} subtitle={t('auth.subtitle')}>
       <View style={{ gap: spacing.md }}>

@@ -1,32 +1,30 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import { useEffect } from 'react';
 import { AppText, Button, DateField, Screen, TextField } from '@/components/ui';
 import { useTripData } from '@/features/data/use-trip-data';
+import { getTripDataErrorKey } from '@/features/data/errors';
+import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
+import type { Trip } from '@/types/domain';
 import { parseMoney } from '@/utils/money/money';
-import { isValidDateRange } from '@/utils/validation/dates';
+import { tripFormSchema, type TripFormValues } from './trip-form-schema';
 
-const schema = z
-  .object({
-    title: z.string().trim().min(2),
-    destination: z.string().trim().min(2),
-    startDate: z.string(),
-    endDate: z.string(),
-    baseCurrency: z.string().regex(/^[A-Za-z]{3}$/),
-    budget: z.string(),
-    coverEmoji: z.string().min(1).max(8),
-  })
-  .superRefine((value, context) => {
-    if (!isValidDateRange(value.startDate, value.endDate))
-      context.addIssue({ code: 'custom', path: ['endDate'], message: 'invalidDates' });
-    if (value.budget && (parseMoney(value.budget, value.baseCurrency.toUpperCase()) ?? 0) <= 0)
-      context.addIssue({ code: 'custom', path: ['budget'], message: 'invalidBudget' });
-  });
-type FormValues = z.infer<typeof schema>;
+const today = () => format(new Date(), 'yyyy-MM-dd');
+
+const formValuesForTrip = (trip: Trip | undefined): TripFormValues => ({
+  title: trip?.title ?? '',
+  destination: trip?.destination ?? '',
+  startDate: trip?.startDate ?? today(),
+  endDate: trip?.endDate ?? today(),
+  baseCurrency: trip?.baseCurrency ?? 'TRY',
+  budget: trip?.budgetAmountMinor ? String(trip.budgetAmountMinor / 100).replace('.', ',') : '',
+  coverEmoji: trip?.coverEmoji ?? '✈️',
+});
 export function TripFormScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -38,22 +36,17 @@ export function TripFormScreen() {
   const {
     control,
     handleSubmit,
+    reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      title: existing?.title ?? '',
-      destination: existing?.destination ?? '',
-      startDate: existing?.startDate ?? new Date().toISOString().slice(0, 10),
-      endDate: existing?.endDate ?? new Date().toISOString().slice(0, 10),
-      baseCurrency: existing?.baseCurrency ?? 'TRY',
-      budget: existing?.budgetAmountMinor
-        ? String(existing.budgetAmountMinor / 100).replace('.', ',')
-        : '',
-      coverEmoji: existing?.coverEmoji ?? '✈️',
-    },
+  } = useForm<TripFormValues>({
+    resolver: zodResolver(tripFormSchema),
+    defaultValues: formValuesForTrip(existing),
   });
+  const startDate = useWatch({ control, name: 'startDate' });
+  useEffect(() => {
+    if (existing) reset(formValuesForTrip(existing));
+  }, [existing, reset]);
   const submit = handleSubmit(async (values) => {
     try {
       const baseCurrency = values.baseCurrency.toUpperCase();
@@ -79,10 +72,10 @@ export function TripFormScreen() {
           '[TripWise] Failed to save trip',
           error instanceof Error ? error.message : String(error),
         );
-      setError('root', { message: t('auth.genericError') });
+      setError('root', { message: t(getTripDataErrorKey(error)) });
     }
   });
-  const message = (name: keyof FormValues) =>
+  const message = (name: keyof TripFormValues) =>
     errors[name]
       ? name === 'endDate'
         ? t('trips.invalidDates')
@@ -90,6 +83,8 @@ export function TripFormScreen() {
           ? t('trips.invalidCurrency')
           : t('common.required')
       : undefined;
+  if (tripId && data.isLoading) return <TripDataLoadingScreen />;
+  if (tripId && data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen contentContainerStyle={{ gap: spacing.lg }}>
       <AppText variant="title">{existing ? t('trips.formEdit') : t('trips.formNew')}</AppText>
@@ -137,6 +132,9 @@ export function TripFormScreen() {
             label={t('trips.endDate')}
             value={field.value}
             onChangeText={field.onChange}
+            minimumDate={
+              /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? new Date(`${startDate}T12:00:00`) : undefined
+            }
             error={message('endDate')}
           />
         )}

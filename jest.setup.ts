@@ -1,4 +1,11 @@
 jest.mock('expo-sqlite/localStorage/install', () => ({}));
+jest.mock('@react-native-community/netinfo', () => ({
+  __esModule: true,
+  default: {
+    addEventListener: jest.fn(() => () => undefined),
+    fetch: jest.fn(async () => ({ isConnected: true, isInternetReachable: true })),
+  },
+}));
 
 const memory = new Map<string, string>();
 const storage: Storage = {
