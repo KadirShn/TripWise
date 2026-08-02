@@ -43,11 +43,11 @@ export function SelectField<T extends string>({
                 borderRadius: radius.pill,
                 borderWidth: 1,
                 borderColor: selected ? colors.primary : colors.border,
-                backgroundColor: selected ? colors.surfaceMuted : colors.surface,
+                backgroundColor: selected ? colors.primary : colors.surface,
                 opacity: pressed ? 0.72 : 1,
               })}
             >
-              <AppText variant="label" style={{ color: selected ? colors.primary : colors.text }}>
+              <AppText variant="label" style={{ color: selected ? colors.onPrimary : colors.text }}>
                 {option.label}
               </AppText>
             </Pressable>

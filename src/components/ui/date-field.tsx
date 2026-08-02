@@ -86,14 +86,14 @@ export function DateField({
         disabled={disabled}
         onPress={openPicker}
         style={({ pressed }) => ({
-          minHeight: 48,
-          paddingHorizontal: spacing.md,
+          minHeight: 54,
+          paddingHorizontal: spacing.lg,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           borderWidth: 1,
           borderColor: error ? colors.danger : colors.border,
-          borderRadius: radius.md,
+          borderRadius: radius.lg,
           borderCurve: 'continuous',
           backgroundColor: pressed ? colors.surfaceMuted : colors.surface,
           opacity: disabled ? 0.55 : 1,

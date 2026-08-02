@@ -17,3 +17,4 @@ export * from './screen';
 export * from './select-field';
 export * from './skeleton';
 export * from './text-field';
+export * from './travel-hero';

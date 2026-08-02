@@ -76,6 +76,10 @@ export const tr = {
   },
   trips: {
     title: 'Gezilerim',
+    heroTitle: 'Sıradaki hikâye nerede?',
+    heroDescription: 'Rotayı kur, ekibi topla; hesap kısmını TripWise düşünsün.',
+    collectionTitle: 'Gezi kartların',
+    collectionDescription: 'Yaklaşan ve geçmiş tüm maceraların bir arada.',
     new: 'Yeni gezi',
     emptyTitle: 'İlk gezini oluştur',
     emptyDescription: 'Tarihleri, bütçeyi ve arkadaşlarını ekleyerek planlamaya başla.',
@@ -97,6 +101,8 @@ export const tr = {
   },
   dashboard: {
     title: 'Gezi özeti',
+    quickActions: 'Gezi çantan',
+    quickActionsDescription: 'Plan, ekip ve ortak hesaplar tek dokunuş uzağında.',
     spent: 'Toplam harcama',
     remaining: 'Kalan bütçe',
     overBudget: 'Bütçe aşıldı',
@@ -185,6 +191,8 @@ export const tr = {
   },
   overview: {
     title: 'Genel Bakış',
+    heroTitle: 'Seyahat radarın',
+    heroDescription: 'Yaklaşan gezileri, harcamaları ve bir sonraki durağı hızlıca gör.',
     activeTrips: 'Aktif geziler',
     totalSpent: 'Toplam harcama',
     nextPlan: 'Sıradaki plan',
@@ -195,6 +203,8 @@ export const tr = {
   },
   settings: {
     title: 'Ayarlar',
+    heroTitle: 'Kendi ritminde',
+    heroDescription: 'TripWise görünümünü, dilini ve hesabını kendine göre ayarla.',
     appearance: 'Görünüm',
     system: 'Sistem',
     light: 'Açık',
@@ -383,6 +393,10 @@ export const en: typeof tr = {
   },
   trips: {
     title: 'My trips',
+    heroTitle: 'Where is the next story?',
+    heroDescription: 'Shape the route and gather the crew; TripWise handles the numbers.',
+    collectionTitle: 'Your trip cards',
+    collectionDescription: 'Upcoming and past adventures, all in one place.',
     new: 'New trip',
     emptyTitle: 'Create your first trip',
     emptyDescription: 'Add dates, a budget, and friends to start planning.',
@@ -405,6 +419,8 @@ export const en: typeof tr = {
   },
   dashboard: {
     title: 'Trip overview',
+    quickActions: 'Your trip kit',
+    quickActionsDescription: 'Plans, people, and shared costs are one tap away.',
     spent: 'Total spent',
     remaining: 'Budget left',
     overBudget: 'Over budget',
@@ -493,6 +509,8 @@ export const en: typeof tr = {
   },
   overview: {
     title: 'Overview',
+    heroTitle: 'Your travel radar',
+    heroDescription: 'See upcoming trips, spending, and the next stop at a glance.',
     activeTrips: 'Active trips',
     totalSpent: 'Total spent',
     nextPlan: 'Next plan',
@@ -503,6 +521,8 @@ export const en: typeof tr = {
   },
   settings: {
     title: 'Settings',
+    heroTitle: 'Make it yours',
+    heroDescription: 'Tune the look, language, and account to your own rhythm.',
     appearance: 'Appearance',
     system: 'System',
     light: 'Light',

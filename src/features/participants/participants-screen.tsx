@@ -176,14 +176,24 @@ export function ParticipantsScreen() {
       {members.length === 0 ? (
         <EmptyState title={t('participants.empty')} description={t('trips.emptyDescription')} />
       ) : (
-        members.map((member) => (
+        members.map((member, index) => (
           <Pressable
             key={member.id}
             accessibilityRole="button"
             disabled={deletingId !== null}
             onPress={() => member.role !== 'owner' && open(member)}
           >
-            <Card>
+            <Card
+              style={{
+                backgroundColor: [
+                  colors.sunSoft,
+                  colors.skySoft,
+                  colors.violetSoft,
+                  colors.mintSoft,
+                ][index % 4],
+                boxShadow: 'none',
+              }}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <Avatar name={member.displayName} />
                 <View style={{ flex: 1 }}>

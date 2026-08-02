@@ -44,12 +44,13 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         {
-          minHeight: 48,
-          paddingHorizontal: spacing.lg,
-          borderRadius: radius.md,
+          minHeight: 52,
+          paddingHorizontal: spacing.xl,
+          borderRadius: radius.pill,
           borderCurve: 'continuous',
           backgroundColor,
-          opacity: disabled || loading ? 0.5 : pressed ? 0.78 : 1,
+          opacity: disabled || loading ? 0.5 : pressed ? 0.84 : 1,
+          transform: [{ scale: pressed && !disabled && !loading ? 0.985 : 1 }],
           alignItems: 'center',
           justifyContent: 'center',
         },

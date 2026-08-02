@@ -274,23 +274,48 @@ export function ItineraryScreen() {
           onAction={() => open('new')}
         />
       ) : (
-        Object.entries(groups).map(([date, dayItems]) => (
+        Object.entries(groups).map(([date, dayItems], groupIndex) => (
           <View key={date} style={{ gap: spacing.md }}>
-            <AppText variant="title">
-              {t('itinerary.dayTitle', {
-                date: formatDateOnly(date, i18n.language),
-              })}
-            </AppText>
-            {dayItems.map((item) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: groupIndex % 2 ? colors.violet : colors.coral,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MaterialCommunityIcons name="map-marker-path" size={25} color="#FFFFFF" />
+              </View>
+              <AppText variant="title" style={{ flex: 1 }}>
+                {t('itinerary.dayTitle', {
+                  date: formatDateOnly(date, i18n.language),
+                })}
+              </AppText>
+            </View>
+            {dayItems.map((item, itemIndex) => (
               <Pressable key={item.id} disabled={deletingId !== null} onPress={() => open(item)}>
-                <Card>
+                <Card
+                  style={{
+                    backgroundColor: itemIndex % 2 === 0 ? colors.skySoft : colors.mintSoft,
+                    boxShadow: 'none',
+                  }}
+                >
                   <View style={{ flexDirection: 'row', gap: spacing.md }}>
                     <View style={{ alignItems: 'center' }}>
                       <AppText variant="label" style={{ color: colors.primary }}>
                         {formatTime(item.startsAt)}
                       </AppText>
                       <View
-                        style={{ width: 2, flex: 1, minHeight: 28, backgroundColor: colors.border }}
+                        style={{
+                          width: 3,
+                          flex: 1,
+                          minHeight: 28,
+                          borderRadius: 2,
+                          backgroundColor: colors.coral,
+                        }}
                       />
                     </View>
                     <View style={{ flex: 1, gap: spacing.xs }}>

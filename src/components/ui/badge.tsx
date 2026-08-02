@@ -12,14 +12,16 @@ export function Badge({
   const { colors } = useAppTheme();
   const color =
     tone === 'warning' ? colors.warning : tone === 'neutral' ? colors.textMuted : colors.primary;
+  const backgroundColor =
+    tone === 'warning' ? colors.sunSoft : tone === 'neutral' ? colors.surfaceMuted : colors.skySoft;
   return (
     <View
       style={{
         alignSelf: 'flex-start',
-        paddingVertical: 4,
-        paddingHorizontal: spacing.sm,
+        paddingVertical: 6,
+        paddingHorizontal: spacing.md,
         borderRadius: radius.pill,
-        backgroundColor: colors.surfaceMuted,
+        backgroundColor,
       }}
     >
       <AppText variant="caption" style={{ color, fontWeight: '700' }}>

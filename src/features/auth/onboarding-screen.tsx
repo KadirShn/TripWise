@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { AppText, Badge, BrandMark, Button, Card, Screen } from '@/components/ui';
+import { AppText, BrandMark, Button, Screen, TravelHero } from '@/components/ui';
 import { useAppStore } from '@/stores/app-store';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
@@ -19,33 +19,51 @@ export function OnboardingScreen() {
   ] as const;
   return (
     <Screen
-      contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', paddingTop: 72 }}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', paddingTop: 32 }}
     >
       <View style={{ gap: spacing.xl }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <BrandMark size={72} />
-          <AppText variant="title">TripWise</AppText>
+        <TravelHero
+          eyebrow={t('onboarding.eyebrow')}
+          title={t('onboarding.title')}
+          description={t('onboarding.description')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <BrandMark size={42} />
+            <AppText variant="label" style={{ color: colors.onNavy }}>
+              TripWise
+            </AppText>
+          </View>
+        </TravelHero>
+        <View style={{ gap: spacing.md }}>
+          {features.map(([icon, label], index) => {
+            const backgrounds = [colors.coralSoft, colors.skySoft, colors.violetSoft];
+            const accents = [colors.coral, colors.primary, colors.violet];
+            return (
+              <View
+                key={icon}
+                style={{
+                  minHeight: 72,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  paddingHorizontal: spacing.lg,
+                  borderRadius: 24,
+                  backgroundColor: backgrounds[index],
+                }}
+              >
+                <MaterialCommunityIcons name={icon} size={27} color={accents[index]} />
+                <AppText variant="label" style={{ flex: 1 }}>
+                  {label}
+                </AppText>
+              </View>
+            );
+          })}
         </View>
-        <Badge label={t('onboarding.eyebrow')} />
-        <AppText variant="display">{t('onboarding.title')}</AppText>
-        <AppText style={{ color: colors.textMuted }}>{t('onboarding.description')}</AppText>
-        <Card>
-          {features.map(([icon, label]) => (
-            <View
-              key={icon}
-              style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
-            >
-              <MaterialCommunityIcons name={icon} size={24} color={colors.primary} />
-              <AppText variant="label" style={{ flex: 1 }}>
-                {label}
-              </AppText>
-            </View>
-          ))}
-        </Card>
       </View>
       <Button
         label={t('onboarding.getStarted')}
         icon="arrow-right"
+        style={{ backgroundColor: colors.coral }}
         onPress={() => {
           complete();
           router.replace('/(auth)/sign-in');

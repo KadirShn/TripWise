@@ -16,7 +16,7 @@ export function ProgressBar({
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ min: 0, max: 100, now: Math.round(percent * 100) }}
       style={{
-        height: 10,
+        height: 12,
         borderRadius: radius.pill,
         backgroundColor: colors.surfaceMuted,
         overflow: 'hidden',
@@ -26,7 +26,7 @@ export function ProgressBar({
         style={{
           height: '100%',
           width: `${percent * 100}%`,
-          backgroundColor: value > 1 ? colors.danger : colors.primary,
+          backgroundColor: value > 1 ? colors.danger : colors.coral,
           borderRadius: radius.pill,
         }}
       />

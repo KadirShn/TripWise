@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
-import { AppText, Button, Card, SelectField, Screen } from '@/components/ui';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { AppText, Button, Card, SelectField, Screen, TravelHero } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useAppStore } from '@/stores/app-store';
 import type { AppLanguage } from '@/stores/app-store';
@@ -39,8 +40,16 @@ export function SettingsScreen() {
   };
   return (
     <Screen>
-      <Card>
-        <AppText variant="subtitle">{t('settings.appearance')}</AppText>
+      <TravelHero
+        eyebrow={t('settings.title')}
+        title={t('settings.heroTitle')}
+        description={t('settings.heroDescription')}
+      />
+      <Card style={{ backgroundColor: colors.violetSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <MaterialCommunityIcons name="palette-outline" size={25} color={colors.violet} />
+          <AppText variant="subtitle">{t('settings.appearance')}</AppText>
+        </View>
         <SelectField
           label={t('settings.appearance')}
           value={preference}
@@ -52,8 +61,11 @@ export function SettingsScreen() {
           ]}
         />
       </Card>
-      <Card>
-        <AppText variant="subtitle">{t('settings.language')}</AppText>
+      <Card style={{ backgroundColor: colors.skySoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <MaterialCommunityIcons name="translate" size={25} color={colors.primary} />
+          <AppText variant="subtitle">{t('settings.language')}</AppText>
+        </View>
         <SelectField
           label={t('settings.language')}
           value={language}
@@ -64,8 +76,11 @@ export function SettingsScreen() {
           ]}
         />
       </Card>
-      <Card>
-        <AppText variant="subtitle">{t('settings.account')}</AppText>
+      <Card style={{ backgroundColor: colors.sunSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <MaterialCommunityIcons name="account-circle-outline" size={25} color={colors.warning} />
+          <AppText variant="subtitle">{t('settings.account')}</AppText>
+        </View>
         <AppText style={{ color: colors.textMuted }}>
           {mode === 'guest' ? t('settings.guestAccount') : (session?.user.email ?? t('auth.email'))}
         </AppText>
@@ -97,8 +112,11 @@ export function SettingsScreen() {
           />
         </View>
       </Card>
-      <Card>
-        <AppText variant="subtitle">{t('settings.privacy')}</AppText>
+      <Card style={{ backgroundColor: colors.mintSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <MaterialCommunityIcons name="shield-check-outline" size={25} color={colors.success} />
+          <AppText variant="subtitle">{t('settings.privacy')}</AppText>
+        </View>
         <View style={{ gap: spacing.sm }}>
           <Button
             variant="secondary"

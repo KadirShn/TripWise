@@ -55,22 +55,28 @@ export function ExpensesScreen() {
           onAction={() => router.push(`/trip/${tripId}/expenses/new` as never)}
         />
       ) : (
-        expenses.map((expense) => {
+        expenses.map((expense, index) => {
           const payer = members.find((m) => m.id === expense.paidByMemberId);
+          const palette = [
+            { background: colors.coralSoft, accent: colors.coral },
+            { background: colors.skySoft, accent: colors.primary },
+            { background: colors.violetSoft, accent: colors.violet },
+            { background: colors.sunSoft, accent: '#A85B00' },
+          ][index % 4];
           return (
             <Pressable
               key={expense.id}
               disabled={deletingId !== null}
               onPress={() => router.push(`/trip/${tripId}/expenses/${expense.id}` as never)}
             >
-              <Card>
+              <Card style={{ backgroundColor: palette.background, boxShadow: 'none' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                   <View
                     style={{
                       width: 44,
                       height: 44,
                       borderRadius: 14,
-                      backgroundColor: colors.surfaceMuted,
+                      backgroundColor: colors.surface,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
@@ -78,12 +84,12 @@ export function ExpensesScreen() {
                     <MaterialCommunityIcons
                       name="receipt-text-outline"
                       size={23}
-                      color={colors.primary}
+                      color={palette.accent}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
                     <AppText variant="label">{expense.title}</AppText>
-                    <AppText variant="caption" style={{ color: colors.textMuted }}>
+                    <AppText variant="caption" style={{ color: palette.accent, fontWeight: '800' }}>
                       {formatDateOnly(expense.expenseDate, i18n.language)} ·{' '}
                       {t('expenses.paidBy', { name: payer?.displayName ?? '—' })}
                     </AppText>

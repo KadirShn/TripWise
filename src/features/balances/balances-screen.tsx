@@ -26,8 +26,31 @@ export function BalancesScreen() {
     bundle.members.find((member) => member.id === id)?.displayName ?? '—';
   return (
     <Screen>
-      <AppText style={{ color: colors.textMuted }}>{t('balances.explanation')}</AppText>
-      <Card>
+      <View
+        style={{
+          padding: spacing.xl,
+          borderRadius: 28,
+          backgroundColor: colors.violetSoft,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.lg,
+        }}
+      >
+        <View
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 18,
+            backgroundColor: colors.violet,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <MaterialCommunityIcons name="scale-balance" size={28} color="#FFFFFF" />
+        </View>
+        <AppText style={{ color: colors.text, flex: 1 }}>{t('balances.explanation')}</AppText>
+      </View>
+      <Card style={{ backgroundColor: colors.sunSoft, boxShadow: 'none' }}>
         {balances.map((balance) => (
           <View
             key={balance.memberId}
@@ -84,9 +107,23 @@ export function BalancesScreen() {
         </Card>
       ) : (
         settlements.map((settlement, index) => (
-          <Card key={`${settlement.fromMemberId}-${settlement.toMemberId}-${index}`}>
+          <Card
+            key={`${settlement.fromMemberId}-${settlement.toMemberId}-${index}`}
+            style={{ backgroundColor: colors.mintSoft, boxShadow: 'none' }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-              <MaterialCommunityIcons name="bank-transfer" size={30} color={colors.primary} />
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: colors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MaterialCommunityIcons name="bank-transfer" size={28} color={colors.mint} />
+              </View>
               <View style={{ flex: 1 }}>
                 <AppText variant="label">
                   {t('balances.transfer', {

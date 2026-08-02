@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 import { AppText } from './app-text';
 import { radius, spacing } from '@/theme/theme';
@@ -9,6 +9,8 @@ export const TextField = forwardRef<
   TextInputProps & { label: string; error?: string; hint?: string }
 >(function TextField({ label, error, hint, multiline, style, ...props }, ref) {
   const { colors } = useAppTheme();
+  const [focused, setFocused] = useState(false);
+  const { onBlur, onFocus, ...inputProps } = props;
   return (
     <View style={{ gap: spacing.xs }}>
       <AppText variant="label">{label}</AppText>
@@ -19,21 +21,29 @@ export const TextField = forwardRef<
         multiline={multiline}
         style={[
           {
-            minHeight: multiline ? 96 : 48,
+            minHeight: multiline ? 104 : 52,
             color: colors.text,
             backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: error ? colors.danger : colors.border,
+            borderWidth: focused || error ? 2 : 1,
+            borderColor: error ? colors.danger : focused ? colors.primary : colors.border,
             borderRadius: radius.md,
             borderCurve: 'continuous',
-            paddingHorizontal: spacing.md,
+            paddingHorizontal: spacing.lg,
             paddingVertical: spacing.sm,
             fontSize: 16,
             textAlignVertical: multiline ? 'top' : 'center',
           },
           style,
         ]}
-        {...props}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        {...inputProps}
       />
       {error ? (
         <AppText

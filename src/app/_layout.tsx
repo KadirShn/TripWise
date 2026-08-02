@@ -18,10 +18,22 @@ export default function RootLayout() {
   useEffect(() => {
     if (i18n.language !== language) void i18n.changeLanguage(language);
   }, [language]);
+  const navigationTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.background,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.coral,
+    },
+  };
   return (
     <QueryProvider>
       <AuthProvider>
-        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={navigationTheme}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <Stack
             screenOptions={{

@@ -4,12 +4,12 @@ import { useAppTheme } from '@/theme/use-app-theme';
 
 type Variant = 'display' | 'title' | 'subtitle' | 'body' | 'caption' | 'label';
 const variants: Record<Variant, TextStyle> = {
-  display: { fontSize: 34, lineHeight: 40, fontWeight: '800', letterSpacing: -0.8 },
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '800', letterSpacing: -0.3 },
-  subtitle: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
+  display: { fontSize: 38, lineHeight: 43, fontWeight: '900', letterSpacing: -1.1 },
+  title: { fontSize: 26, lineHeight: 32, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 19, lineHeight: 25, fontWeight: '800', letterSpacing: -0.15 },
   body: { fontSize: 16, lineHeight: 23, fontWeight: '400' },
-  caption: { fontSize: 13, lineHeight: 18, fontWeight: '500' },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
+  caption: { fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  label: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
 };
 
 export function AppText({

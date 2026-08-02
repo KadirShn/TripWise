@@ -120,15 +120,15 @@ export function DateTimeField({
           disabled={disabled}
           onPress={openPicker}
           style={({ pressed }) => ({
-            minHeight: 48,
+            minHeight: 54,
             flex: 1,
-            paddingHorizontal: spacing.md,
+            paddingHorizontal: spacing.lg,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             borderWidth: 1,
             borderColor: error ? colors.danger : colors.border,
-            borderRadius: radius.md,
+            borderRadius: radius.lg,
             borderCurve: 'continuous',
             backgroundColor: pressed ? colors.surfaceMuted : colors.surface,
             opacity: disabled ? 0.55 : 1,
@@ -145,13 +145,13 @@ export function DateTimeField({
             accessibilityLabel={t('common.clear')}
             onPress={() => onChangeText?.('')}
             style={({ pressed }) => ({
-              width: 48,
-              height: 48,
+              width: 54,
+              height: 54,
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: 1,
               borderColor: colors.border,
-              borderRadius: radius.md,
+              borderRadius: radius.lg,
               borderCurve: 'continuous',
               backgroundColor: pressed ? colors.surfaceMuted : colors.surface,
             })}

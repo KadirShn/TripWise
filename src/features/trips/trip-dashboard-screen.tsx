@@ -2,7 +2,15 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
-import { AppText, Card, EmptyState, MoneyText, ProgressBar, Screen } from '@/components/ui';
+import {
+  AppText,
+  Card,
+  EmptyState,
+  MoneyText,
+  ProgressBar,
+  Screen,
+  SectionHeading,
+} from '@/components/ui';
 import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import type { ExpenseCategory } from '@/types/domain';
 import { spacing } from '@/theme/theme';
@@ -61,73 +69,152 @@ export function TripDashboardScreen() {
     ['scale-balance', t('dashboard.balances'), 'balances'],
     ['map-clock-outline', t('dashboard.itinerary'), 'itinerary'],
   ] as const;
+  const actionPalettes = [
+    { background: colors.coralSoft, accent: colors.coral },
+    { background: colors.skySoft, accent: colors.primary },
+    { background: colors.violetSoft, accent: colors.violet },
+    { background: colors.mintSoft, accent: colors.mint },
+  ];
   return (
     <Screen>
-      <View style={{ gap: spacing.xs }}>
-        <TripCoverEmoji emoji={trip.coverEmoji} size={68} />
-        <AppText variant="display">{trip.title}</AppText>
-        <AppText style={{ color: colors.textMuted }}>
-          {trip.destination} · {formatDateOnly(trip.startDate, i18n.language)} —{' '}
-          {formatDateOnly(trip.endDate, i18n.language)}
-        </AppText>
-      </View>
-      <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
-          <View>
-            <AppText variant="caption" style={{ color: colors.textMuted }}>
-              {t('dashboard.spent')}
-            </AppText>
-            <MoneyText
-              amountMinor={total}
-              currency={trip.baseCurrency}
-              style={{ fontSize: 28, fontWeight: '800' }}
-            />
+      <View
+        style={{
+          padding: spacing.xl,
+          paddingTop: spacing.xxl,
+          borderRadius: 34,
+          backgroundColor: colors.navy,
+          overflow: 'hidden',
+          gap: spacing.lg,
+        }}
+      >
+        <View
+          style={{
+            position: 'absolute',
+            width: 128,
+            height: 128,
+            borderRadius: 64,
+            right: -38,
+            top: -44,
+            backgroundColor: colors.coral,
+          }}
+        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
+          <View
+            style={{
+              width: 82,
+              height: 82,
+              borderRadius: 26,
+              backgroundColor: colors.sun,
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: [{ rotate: '-4deg' }],
+            }}
+          >
+            <TripCoverEmoji emoji={trip.coverEmoji} size={70} />
           </View>
-          {budget !== null ? (
-            <View style={{ alignItems: 'flex-end' }}>
-              <AppText variant="caption" style={{ color: colors.textMuted }}>
-                {total > budget ? t('dashboard.overBudget') : t('dashboard.remaining')}
+          <View style={{ flex: 1, gap: spacing.xs }}>
+            <AppText variant="display" style={{ color: colors.onNavy }}>
+              {trip.title}
+            </AppText>
+            <AppText style={{ color: '#DCE4F2' }}>{trip.destination}</AppText>
+            <AppText variant="caption" style={{ color: '#DCE4F2' }}>
+              {formatDateOnly(trip.startDate, i18n.language)} —{' '}
+              {formatDateOnly(trip.endDate, i18n.language)}
+            </AppText>
+          </View>
+        </View>
+        <View
+          style={{
+            padding: spacing.lg,
+            borderRadius: 22,
+            backgroundColor: 'rgba(255,255,255,0.10)',
+            gap: spacing.md,
+          }}
+        >
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
+            <View>
+              <AppText variant="caption" style={{ color: '#DCE4F2' }}>
+                {t('dashboard.spent')}
               </AppText>
               <MoneyText
-                amountMinor={Math.abs(budget - total)}
+                amountMinor={total}
                 currency={trip.baseCurrency}
-                style={{
-                  color: total > budget ? colors.danger : colors.success,
-                  fontWeight: '700',
-                }}
+                style={{ color: colors.onNavy, fontSize: 28, lineHeight: 34, fontWeight: '900' }}
               />
             </View>
-          ) : null}
+            {budget !== null ? (
+              <View style={{ alignItems: 'flex-end' }}>
+                <AppText variant="caption" style={{ color: '#DCE4F2' }}>
+                  {total > budget ? t('dashboard.overBudget') : t('dashboard.remaining')}
+                </AppText>
+                <MoneyText
+                  amountMinor={Math.abs(budget - total)}
+                  currency={trip.baseCurrency}
+                  style={{
+                    color: total > budget ? colors.coral : colors.mint,
+                    fontWeight: '900',
+                  }}
+                />
+              </View>
+            ) : null}
+          </View>
+          {budget !== null ? (
+            <ProgressBar value={total / budget} accessibilityLabel={t('trips.budget')} />
+          ) : (
+            <AppText style={{ color: '#DCE4F2' }}>{t('dashboard.noBudget')}</AppText>
+          )}
         </View>
-        {budget !== null ? (
-          <ProgressBar value={total / budget} accessibilityLabel={t('trips.budget')} />
-        ) : (
-          <AppText style={{ color: colors.textMuted }}>{t('dashboard.noBudget')}</AppText>
-        )}
-      </Card>
+      </View>
+      <SectionHeading
+        title={t('dashboard.quickActions')}
+        caption={t('dashboard.quickActionsDescription')}
+      />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-        {actions.map(([icon, label, path]) => (
-          <Pressable
-            key={path}
-            accessibilityRole="button"
-            onPress={() => router.push(`/trip/${tripId}/${path}` as never)}
-            style={{ width: '47%', minHeight: 116 }}
-          >
-            <Card style={{ flex: 1, justifyContent: 'space-between' }}>
-              <MaterialCommunityIcons name={icon} size={28} color={colors.primary} />
-              <AppText variant="label">{label}</AppText>
-              <AppText variant="caption" style={{ color: colors.textMuted }}>
-                {path === 'expenses'
-                  ? expenses.length
-                  : path === 'participants'
-                    ? members.length
-                    : path === 'itinerary'
-                      ? itineraryItems.length
-                      : '→'}
-              </AppText>
-            </Card>
-          </Pressable>
-        ))}
+        {actions.map(([icon, label, path], index) => {
+          const palette = actionPalettes[index];
+          return (
+            <Pressable
+              key={path}
+              accessibilityRole="button"
+              onPress={() => router.push(`/trip/${tripId}/${path}` as never)}
+              style={({ pressed }) => ({
+                width: '47%',
+                minHeight: 132,
+                padding: spacing.lg,
+                borderRadius: 26,
+                backgroundColor: palette.background,
+                justifyContent: 'space-between',
+                opacity: pressed ? 0.82 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 15,
+                  backgroundColor: colors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MaterialCommunityIcons name={icon} size={25} color={palette.accent} />
+              </View>
+              <View style={{ gap: 2 }}>
+                <AppText variant="label">{label}</AppText>
+                <AppText variant="caption" style={{ color: colors.textMuted }}>
+                  {path === 'expenses'
+                    ? expenses.length
+                    : path === 'participants'
+                      ? members.length
+                      : path === 'itinerary'
+                        ? itineraryItems.length
+                        : '→'}
+                </AppText>
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
       {categories.length ? (
         <Card>

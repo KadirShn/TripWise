@@ -27,7 +27,19 @@ export function EmptyState({
         alignItems: 'center',
       }}
     >
-      <MaterialCommunityIcons name={icon} size={48} color={colors.primary} />
+      <View
+        style={{
+          width: 86,
+          height: 86,
+          borderRadius: 28,
+          backgroundColor: colors.skySoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+          transform: [{ rotate: '-4deg' }],
+        }}
+      >
+        <MaterialCommunityIcons name={icon} size={44} color={colors.primary} />
+      </View>
       <AppText variant="title" style={{ textAlign: 'center' }}>
         {title}
       </AppText>
