@@ -1,101 +1,164 @@
+<div align="center">
+  <img src="assets/brand/tripwise-icon.png" width="120" alt="TripWise uygulama ikonu" />
+
 # TripWise
 
-TripWise, grup seyahatleri için Android öncelikli, iOS uyumlu bir Expo React Native gider paylaşımı ve günlük rota uygulamasıdır. Arayüzün varsayılan dili Türkçedir. Supabase yapılandırması olmadan uygulama çökmez; tamamen yerel ve kalıcı örnek verilerle demo modunda çalışır.
+**Grup seyahatlerinde rotayı, bütçeyi ve ortak harcamaları tek yerde yönetin.**
 
-## MVP ekranları ve özellikleri
+[![Quality](https://github.com/KadirShn/TripWise/actions/workflows/quality.yml/badge.svg)](https://github.com/KadirShn/TripWise/actions/workflows/quality.yml)
+![Expo SDK 57](https://img.shields.io/badge/Expo%20SDK-57-000020?logo=expo&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=18243A)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-43C6A5.svg)](LICENSE)
 
-- İlk açılış onboarding akışı
-- Supabase e-posta/şifre ile kayıt, giriş ve şifre sıfırlama
-- Kalıcı, yerel “Demo modu” ve gerçekçi Kapadokya örnek gezisi
+Android öncelikli · iOS uyumlu mimari · Türkçe varsayılan arayüz
+</div>
+
+---
+
+TripWise, arkadaş gruplarının ve ailelerin gezi planlarken en çok zorlandığı iki alanı bir araya getirir: **günlük rota planlama** ve **ortak harcamaları adil biçimde bölüştürme**. Uygulama Supabase hesabıyla çevrimiçi çalışabilir veya herhangi bir sunucu kurulumu olmadan kalıcı demo modunda uçtan uca denenebilir.
+
+## Öne çıkanlar
+
+|     | Özellik                   | Açıklama                                                                                     |
+| --- | ------------------------- | -------------------------------------------------------------------------------------------- |
+| 🧭  | Gezi ve rota planlama     | Gezileri, katılımcıları ve gün gün aktiviteleri tek akışta yönetin.                          |
+| 💸  | Güvenilir gider paylaşımı | Eşit, kesin tutar ve yüzde yöntemleriyle harcamaları minor unit hassasiyetinde bölüştürün.   |
+| ⚖️  | Sade ödeme planı          | Katılımcı bakiyelerini hesaplayın ve borçları deterministik olarak en az transfere indirin.  |
+| 📶  | Çevrimdışı dayanıklılık   | Önbelleğe alınmış gezi verilerini görüntüleyin; başarısız kayıtlarda form içeriğini koruyun. |
+| 🎒  | Hazır demo deneyimi       | Supabase anahtarı olmadan gerçekçi Türkçe örnek veriyle uygulamayı hemen keşfedin.           |
+| 🔐  | Kullanıcı bazlı güvenlik  | Supabase RLS, kullanıcıya ayrılmış cache ve JWT korumalı hesap silme akışı kullanın.         |
+
+## MVP kapsamı
+
+- Onboarding, e-posta/şifre kaydı, giriş ve şifre sıfırlama
+- E-posta doğrulama durumlarına uygun kullanıcı bilgilendirmesi
+- Yerel ve kalıcı demo modu
 - Gezi oluşturma, düzenleme, silme ve bütçe özeti
 - Katılımcı yönetimi
-- Harcama CRUD; eşit, kesin tutar ve yüzde bölüşümü
-- Integer minor-unit para modeli, çoklu para birimi için elle girilen ana-kur değeri
-- Katılımcı bakiyeleri ve deterministik sadeleştirilmiş ödeme planı
-- Günlük rota CRUD ve tahmini maliyet
-- Açık/koyu/sistem teması, Türkçe/İngilizce altyapısı
-- TripWise marka ikonu, Android adaptive/monochrome ikonları ve markalı splash ekranı
-- Uygulama ve web ile uyumlu Gizlilik Politikası ve Hesap/Veri Silme sayfaları
-- SQLite tabanlı yerel kalıcılık, React Query önbellek kalıcılığı ve çevrimdışı uyarısı
-- Supabase PostgreSQL migration, kısıtlar, indeksler ve tüm kullanıcı tablolarında RLS
+- Harcama CRUD ve üç farklı bölüştürme yöntemi
+- Bakiye hesabı ve sadeleştirilmiş ödeme planı
+- Günlük rota ve tahmini aktivite maliyetleri
+- Harcama kategori özeti ve bütçe ilerlemesi
+- Açık, koyu ve sistem teması
+- Türkçe ve İngilizce çeviri altyapısı
+- Çevrimdışı, yükleniyor, boş, hata ve yeniden deneme durumları
+- Gizlilik politikası ve hesap/veri silme ekranları
+- Android adaptive/monochrome ikonları ve markalı splash ekranı
 
-## Teknik yığın
+## Tasarım yaklaşımı
 
-- Expo SDK 57, React Native 0.86, TypeScript strict, Expo Router
-- Supabase Auth/PostgreSQL
-- TanStack Query, Zustand
-- React Hook Form, Zod
-- `expo-sqlite`, `expo-secure-store`, `expo-localization`
-- i18next, date-fns
-- Jest, React Native Testing Library, ESLint, Prettier
+TripWise, klasik kurumsal finans uygulamalarından ayrılan seyahat odaklı bir tasarım sistemi kullanır. Sıcak günlük zemini; pasaport laciverti, mercan, gökyüzü, güneş, mor ve mint renkleriyle tamamlanır. Bento özet alanları, gezi posterleri ve zaman çizelgesi biçimindeki rota kartları hem açık hem koyu temada çalışır.
 
-## Gereksinimler (Windows 11)
+## Teknik yapı
+
+- **Uygulama:** Expo SDK 57, React Native 0.86, Expo Router
+- **Dil:** TypeScript strict mode
+- **Backend:** Supabase Auth ve PostgreSQL
+- **Sunucu durumu:** TanStack Query
+- **Yerel durum:** Zustand
+- **Formlar:** React Hook Form ve Zod
+- **Yerel veri:** expo-sqlite ve SecureStore
+- **Yerelleştirme:** i18next, expo-localization ve date-fns
+- **Test:** Jest ve React Native Testing Library
+- **Kalite:** ESLint, Prettier, Expo Doctor ve GitHub Actions
+
+```text
+src/
+├── app/                 # Expo Router rotaları
+├── components/ui/       # Tasarım sistemi bileşenleri
+├── features/            # Auth, geziler, harcamalar, rota ve ayarlar
+├── lib/                 # Supabase, query, storage ve i18n altyapısı
+├── stores/              # Küçük istemci/UI durumları
+├── theme/               # Açık/koyu tema tokenları
+├── types/               # Merkezi domain ve veritabanı tipleri
+└── utils/               # Para, tarih ve ödeme algoritmaları
+
+supabase/
+├── functions/           # Hesap silme Edge Function
+└── migrations/          # Şema, RLS ve veri bütünlüğü migration'ları
+```
+
+## Hızlı başlangıç
+
+### Gereksinimler
 
 - Node.js 20.19.4 veya üzeri
-- npm 10+ veya Corepack/pnpm
-- Android için Android Studio ve çalışan bir emulator; alternatif olarak SDK 57 destekleyen Expo Go/dev client
-- Supabase özellikleri için bir Supabase projesi
+- pnpm 11
+- Android Studio ve Android SDK veya Expo Go
+- Supabase özellikleri için isteğe bağlı bir Supabase projesi
 
-## Yerel kurulum
-
-PowerShell'de repository kökünde:
+### Kurulum
 
 ```powershell
+git clone https://github.com/KadirShn/TripWise.git
+cd TripWise
 corepack enable
 pnpm install
 Copy-Item .env.example .env.local
-pnpm start
+pnpm start --clear
 ```
 
-Metro arayüzünde `a` tuşu Android emulatorünü açar. Doğrudan:
+Supabase değişkenlerini boş bırakırsanız uygulama çökmez; **Demo modu** ile açılır.
+
+Android development build için:
 
 ```powershell
 pnpm android
 ```
 
-Bu proje özel native modül içermez; önce Expo Go ile çalıştırılabilir. Geliştirme build'i gerektiğinde:
+Android SDK yolu otomatik bulunamazsa `android/local.properties` dosyasına kendi SDK dizininizi yazın:
 
-```powershell
-npx eas-cli@latest build --profile development --platform android
+```properties
+sdk.dir=C:\\Users\\KULLANICI_ADI\\AppData\\Local\\Android\\Sdk
 ```
 
-## Supabase kurulumu
+## Ortam değişkenleri
 
-1. Supabase Dashboard'da yeni bir proje oluşturun.
-2. Yeni projede `supabase/migrations` klasöründeki migration dosyalarını dosya adı sırasıyla çalıştırın. Supabase CLI kullanıyorsanız proje bağlantısından sonra `npx supabase db push` tüm migration'ları doğru sırada uygular.
-   - Mevcut bir TripWise veritabanını sağlamlaştırmak için en az [`202607310003_data_integrity_hardening.sql`](supabase/migrations/202607310003_data_integrity_hardening.sql) dosyasını SQL Editor'da bir kez çalıştırın.
-   - Bu migration harcama ve payları tek transaction içinde kaydeden `upsert_expense_with_splits` RPC'sini, çapraz-gezi üyelik kontrollerini ve ertelenmiş toplam doğrulamalarını kurar.
-   - [`202608010001_account_deletion_cleanup.sql`](supabase/migrations/202608010001_account_deletion_cleanup.sql), başka gezilerdeki kullanıcı katkılarının hesap silmeyi engellememesi için silme öncesi temizleme RPC'sini kurar.
-3. Authentication > Providers bölümünde Email sağlayıcısını etkinleştirin. Geliştirme sırasında e-posta doğrulamasını tercihinize göre açın veya kapatın.
-4. Authentication > URL Configuration bölümüne mobil yönlendirme için `tripwise://**` ekleyin.
-5. Project Settings > API bölümündeki Project URL ve publishable/anon anahtarını `.env.local` içine yazın:
+`.env.example` dosyasını `.env.local` olarak kopyalayın:
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://PROJECT_REF.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_OR_ANON_KEY
 ```
 
-6. Metro'yu environment değişikliğinden sonra `pnpm start --clear` ile yeniden başlatın.
+> [!IMPORTANT]
+> Mobil uygulamaya hiçbir zaman Supabase `service_role` anahtarı koymayın. `EXPO_PUBLIC_*` değerleri uygulama paketinden görülebilir; yalnızca RLS ile sınırlandırılmış publishable/anon anahtarı kullanın.
 
-### Hesap silme Edge Function
+## Supabase kurulumu
 
-Mobil uygulama [`supabase/functions/delete-account/index.ts`](supabase/functions/delete-account/index.ts) fonksiyonunu çağırır. Fonksiyon yalnızca geçerli kullanıcı JWT'sini kabul eder ve kullanıcıyı kendi kimliği üzerinden siler. Service-role/secret anahtarı mobil uygulamaya eklenmez.
-
-Supabase CLI ile projeyi bağladıktan sonra:
+1. Supabase Dashboard’dan yeni bir proje oluşturun.
+2. Authentication → Providers bölümünde **Email** sağlayıcısını etkinleştirin.
+3. Authentication → URL Configuration alanına `tripwise://**` yönlendirmesini ekleyin.
+4. Project URL ve publishable anahtarını `.env.local` içine yazın.
+5. CLI ile projeyi bağlayıp migration’ları uygulayın:
 
 ```powershell
 npx supabase login
 npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push
+```
+
+Migration’lar şu güvenlik ve bütünlük katmanlarını kurar:
+
+- Tüm kullanıcı tablolarında Row Level Security
+- Gezi sahipliği ve üye rolü kontrolleri
+- Harcama ile paylarını tek transaction içinde kaydeden RPC
+- Katılımcı, harcama ve bölüşüm satırlarında aynı gezi doğrulaması
+- Yeni kullanıcı için profil oluşturma trigger’ı
+- Hesap silme öncesi ilişkili verileri güvenle hazırlayan RPC
+
+### Hesap silme fonksiyonu
+
+```powershell
 npx supabase functions deploy delete-account
 ```
 
-Yeni migration uygulandıktan sonra Edge Function'ı yeniden deploy edin. Fonksiyon önce kullanıcının kendi yetkisiyle `prepare_account_deletion` RPC'sini çalıştırır, ardından yalnızca sunucudaki admin istemcisiyle Auth kullanıcısını siler.
+[`delete-account`](supabase/functions/delete-account/index.ts) fonksiyonu geçerli kullanıcı JWT’sini doğrular. Auth kullanıcısını silmek için gereken yetkili anahtar yalnızca Supabase sunucu ortamında kalır.
 
-`supabase/config.toml` içinde JWT doğrulaması açıktır. Supabase'in otomatik sağladığı sunucu secret'larını `.env.local` içine kopyalamayın.
+### RLS entegrasyon testi
 
-### İki kullanıcılı RLS doğrulaması
-
-Supabase Authentication bölümünde doğrulanmış iki ayrı test hesabı oluşturun. Ardından yalnızca açık PowerShell oturumu için aşağıdaki değişkenleri tanımlayın:
+İki doğrulanmış Supabase test hesabı oluşturduktan sonra yalnızca açık terminal oturumunda:
 
 ```powershell
 $env:SUPABASE_TEST_URL="https://PROJECT_REF.supabase.co"
@@ -107,54 +170,58 @@ $env:SUPABASE_TEST_USER_B_PASSWORD="TEST_PASSWORD_B"
 pnpm test:rls
 ```
 
-Test; özel gezilerin diğer hesaba görünmediğini, üyelerin okuyabildiğini, `viewer` rolünün yazamadığını ve hatalı harcama transaction'ının geride yarım kayıt bırakmadığını doğrular. Test verileri sonunda silinir. Bu test şifrelerini dosyaya kaydetmeyin.
+Test; özel gezilerin hesaplar arasında sızmadığını, üye rollerini ve başarısız transaction’ın yarım veri bırakmadığını doğrular. Test parolalarını dosyaya kaydetmeyin.
 
-Mobil uygulamaya service-role anahtarı konulmamalıdır. `EXPO_PUBLIC_*` değerleri uygulama paketinde görülebilir; yalnızca RLS ile sınırlandırılmış publishable/anon anahtarı kullanılır.
-
-## Kalite komutları
-
-Şartnamedeki komutlar:
+## Kalite kontrolleri
 
 ```powershell
 npx expo-doctor
-npm run lint
-npm run typecheck
-npm test -- --runInBand
+pnpm run lint
+pnpm run typecheck
+pnpm test -- --runInBand
+pnpm run format:check
 ```
 
-pnpm karşılıkları:
+Finansal testler; minor unit para işlemlerini, küsurat dağıtımını, yüzde ve kesin tutar kontrollerini, çoklu para birimi dönüşümünü, bakiye hesabını ve borç sadeleştirmeyi kapsar.
+
+## Android production build
+
+EAS projesi bağlandıktan ve production ortam değişkenleri EAS’e eklendikten sonra:
 
 ```powershell
-pnpm exec expo-doctor
-pnpm lint
-pnpm typecheck
-pnpm test --runInBand
+npx eas-cli@latest env:list --environment production
+npx eas-cli@latest build --platform android --profile production
 ```
 
-## EAS build
+`production` profili Google Play için `.aab` üretir ve `versionCode` değerini otomatik artırır. Önizleme APK’sı için:
 
 ```powershell
-npx eas-cli@latest login
-npx eas-cli@latest build:configure
-npx eas-cli@latest build --profile preview --platform android
-npx eas-cli@latest build --profile production --platform android
+npx eas-cli@latest build --platform android --profile preview
 ```
 
-Android paket adı `app.json` içindeki `expo.android.package` alanında, iOS kimliği ekleneceğinde aynı dosyada tutulur. Mevcut scheme `tripwise`'dır.
+## Veri ve güvenlik yaklaşımı
 
-## Veri, çevrimdışı davranış ve gizlilik
+- Para değerleri canonical olarak integer minor unit biçiminde saklanır.
+- Finansal hesaplamalar saf, deterministik ve test edilmiştir.
+- Supabase sorguları UI bileşenlerinin dışında repository katmanında tutulur.
+- Query cache kullanıcı kimliğine göre ayrılır ve hesap değişiminde temizlenir.
+- Authenticated çevrimdışı mutasyonlar sessizce uygulanmaz; kullanıcı girdisi korunur.
+- Demo verileri cihazda yerel kalır ve Supabase’e gönderilmez.
+- Gerçek secret’lar repoya dahil edilmez.
 
-- Demo verisi cihazdaki SQLite-backed key/value depoda tutulur ve Supabase'e gönderilmez.
-- Supabase oturum belirteçleri native platformlarda SecureStore'da tutulur.
-- Sunucu sorgu önbelleği cihazda kalıcıdır. Çevrimdışıyken önbellek gösterilir; doğrulanamayan authenticated mutasyonlar uygulanmaz ve form içeriği ekranda korunur.
-- Sunucu sorgu önbelleği kullanıcı kimliğiyle ayrılır, hesap değişiminde eski kullanıcı verisi temizlenir ve bozuk cache güvenle sıfırlanır.
-- Ayarlardaki hesap silme işlemi JWT korumalı `delete-account` Edge Function'ına bağlıdır. Fonksiyon deploy edilmeden buton güvenli biçimde hata gösterir.
-- Gizlilik politikası `/privacy`, hesap ve veri silme açıklaması `/delete-account` rotasındadır. Expo web çıktısı yayımlandığında mağaza formlarında bu rotaların herkese açık HTTPS adresleri kullanılabilir.
+## Bilinen MVP sınırları
 
-## Bilinen MVP sınırlamaları
+- Canlı çok kullanıcılı eşzamanlı düzenleme bulunmaz.
+- Otomatik döviz kuru servisi yoktur; kur kullanıcı tarafından girilir.
+- Authenticated çevrimdışı mutasyon kuyruğu yoktur.
+- Push notification, QR davet, OCR, dışa aktarma, reklam ve abonelik MVP dışındadır.
 
-- Canlı çok-kullanıcılı senkronizasyon yoktur; ekran yeniden açılışında/signed-in hydration sırasında güncel snapshot alınır.
-- Otomatik döviz kuru yoktur. Ana para biriminden farklı harcamalarda kur kullanıcı tarafından girilir.
-- Authenticated çevrimdışı mutasyon kuyruğu yoktur; veri kaybını önlemek için mutasyon sunucu başarısından sonra yerel görünüme uygulanır.
-- Hesap silme Edge Function'ının her Supabase ortamına deploy edilmesi manuel release adımıdır.
-- Bildirim, QR davet, OCR, dışa aktarma, reklam, abonelik ve production AI özellikleri MVP dışındadır; ayrıntılar [`BACKLOG.md`](BACKLOG.md) içindedir.
+Planlanan ancak henüz uygulanmayan özellikler için [`BACKLOG.md`](BACKLOG.md) dosyasına bakın.
+
+## Katkıda bulunma
+
+Katkılar için geliştirme ortamı, branch ve doğrulama beklentileri [`CONTRIBUTING.md`](CONTRIBUTING.md) dosyasında açıklanmıştır.
+
+## Lisans
+
+Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.

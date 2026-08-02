@@ -1,7 +1,26 @@
 {
   "name": "tripwise",
+  "description": "Group travel expense splitter and day-by-day itinerary planner built with Expo.",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "license": "MIT",
+  "author": "Kadir Şahin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KadirShn/TripWise.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KadirShn/TripWise/issues"
+  },
+  "homepage": "https://github.com/KadirShn/TripWise#readme",
+  "keywords": [
+    "expo",
+    "react-native",
+    "travel",
+    "expense-splitter",
+    "itinerary",
+    "supabase"
+  ],
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "15.0.2",
