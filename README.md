@@ -9,7 +9,7 @@
 ![Expo SDK 57](https://img.shields.io/badge/Expo%20SDK-57-000020?logo=expo&logoColor=white)
 ![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=18243A)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/License-MIT-43C6A5.svg)](LICENSE)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-43C6A5.svg)](LICENSE)
 
 Android öncelikli · iOS uyumlu mimari · Türkçe varsayılan arayüz
 </div>
@@ -224,4 +224,4 @@ Katkılar için geliştirme ortamı, branch ve doğrulama beklentileri [`CONTRIB
 
 ## Lisans
 
-Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.
+TripWise kaynak kodu [PolyForm Noncommercial License 1.0.0](LICENSE) altında source-available olarak yayımlanır. Kişisel, eğitimsel ve diğer ticari olmayan kullanımlara izin verilir. Yazılımın veya türevlerinin ticari kullanımı, satışı, yeniden satışı, gelir elde etmek amacıyla kullanılması veya pazarlanması için telif sahibinden ayrıca yazılı lisans alınması gerekir.
