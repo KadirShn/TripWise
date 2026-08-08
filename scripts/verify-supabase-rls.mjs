@@ -16,6 +16,8 @@ const tripB = randomUUID();
 const ownerA = randomUUID();
 const ownerB = randomUUID();
 const viewerB = randomUUID();
+const validExpenseId = randomUUID();
+const validSplitId = randomUUID();
 
 const assertNoError = (label, error) => {
   if (error) throw new Error(`${label}: ${error.message}`);
@@ -71,6 +73,44 @@ const main = async () => {
         })
       ).error,
     );
+
+    const validExpense = await clientA.rpc('upsert_expense_with_splits', {
+      p_expense: {
+        id: validExpenseId,
+        trip_id: tripA,
+        paid_by_member_id: ownerA,
+        title: 'Valid atomic expense',
+        notes: null,
+        category: 'food',
+        amount_minor: 100,
+        currency: 'TRY',
+        exchange_rate_to_base: 1,
+        expense_date: '2030-01-01',
+        split_method: 'equal',
+      },
+      p_splits: [
+        {
+          id: validSplitId,
+          member_id: ownerA,
+          share_minor: 100,
+          percentage: null,
+        },
+      ],
+    });
+    assertNoError('Create valid atomic expense', validExpense.error);
+
+    const persistedExpense = await clientA.from('expenses').select('id').eq('id', validExpenseId);
+    assertNoError('Read valid atomic expense', persistedExpense.error);
+    if (persistedExpense.data?.length !== 1)
+      throw new Error('Valid atomic expense was not persisted');
+
+    const persistedSplits = await clientA
+      .from('expense_splits')
+      .select('id, share_minor')
+      .eq('expense_id', validExpenseId);
+    assertNoError('Read valid atomic expense splits', persistedSplits.error);
+    if (persistedSplits.data?.length !== 1 || persistedSplits.data[0]?.share_minor !== 100)
+      throw new Error('Valid atomic expense split was not persisted correctly');
 
     const hiddenFromB = await clientB.from('trips').select('id').eq('id', tripA);
     assertNoError('Read private trip as user B', hiddenFromB.error);
@@ -146,8 +186,8 @@ const main = async () => {
 
     process.stdout.write('Supabase RLS two-user verification passed.\n');
   } finally {
-    await clientA.from('trips').delete().eq('id', tripA);
-    await clientB.from('trips').delete().eq('id', tripB);
+    await clientA.rpc('delete_owned_trip', { p_trip_id: tripA });
+    await clientB.rpc('delete_owned_trip', { p_trip_id: tripB });
     await clientA.auth.signOut({ scope: 'local' });
     await clientB.auth.signOut({ scope: 'local' });
   }

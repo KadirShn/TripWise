@@ -180,6 +180,7 @@ export function ExpenseFormScreen() {
       });
       router.back();
     } catch (error) {
+      if (__DEV__) console.error('[TripWise] Failed to save expense', error);
       setError('root', { message: t(getTripDataErrorKey(error)) });
     }
   });

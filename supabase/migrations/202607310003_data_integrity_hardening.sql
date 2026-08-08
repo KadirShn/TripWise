@@ -195,7 +195,7 @@ security invoker
 set search_path = ''
 as $$
 declare
-  expense_id uuid := (p_expense ->> 'id')::uuid;
+  target_expense_id uuid := (p_expense ->> 'id')::uuid;
   target_trip_id uuid := (p_expense ->> 'trip_id')::uuid;
   target_amount bigint := (p_expense ->> 'amount_minor')::bigint;
   target_method public.expense_split_method := (p_expense ->> 'split_method')::public.expense_split_method;
@@ -217,7 +217,7 @@ begin
 
   select e.trip_id into existing_trip_id
   from public.expenses e
-  where e.id = expense_id;
+  where e.id = target_expense_id;
   if found and existing_trip_id <> target_trip_id then
     raise exception using errcode = '23514', message = 'Expense cannot be moved to another trip';
   end if;
@@ -255,7 +255,7 @@ begin
     id, trip_id, created_by, paid_by_member_id, title, notes, category,
     amount_minor, currency, exchange_rate_to_base, expense_date, split_method
   ) values (
-    expense_id,
+    target_expense_id,
     target_trip_id,
     auth.uid(),
     (p_expense ->> 'paid_by_member_id')::uuid,
@@ -279,19 +279,19 @@ begin
     expense_date = excluded.expense_date,
     split_method = excluded.split_method;
 
-  delete from public.expense_splits s where s.expense_id = expense_id;
+  delete from public.expense_splits s where s.expense_id = target_expense_id;
 
   insert into public.expense_splits (id, expense_id, member_id, share_minor, percentage)
   select
     (value ->> 'id')::uuid,
-    expense_id,
+    target_expense_id,
     (value ->> 'member_id')::uuid,
     (value ->> 'share_minor')::bigint,
     case when value ? 'percentage' and value ->> 'percentage' is not null
       then (value ->> 'percentage')::numeric else null end
   from jsonb_array_elements(p_splits);
 
-  return expense_id;
+  return target_expense_id;
 end;
 $$;
 

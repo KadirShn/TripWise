@@ -180,6 +180,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      delete_owned_trip: {
+        Args: { p_trip_id: string };
+        Returns: undefined;
+      };
       prepare_account_deletion: {
         Args: Record<PropertyKey, never>;
         Returns: undefined;

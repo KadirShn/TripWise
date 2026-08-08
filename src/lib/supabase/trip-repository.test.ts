@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import type { Expense } from '@/types/domain';
 import { supabase } from './client';
-import { upsertRemoteExpense } from './trip-repository';
+import { deleteRemoteTrip, upsertRemoteExpense } from './trip-repository';
 
 jest.mock('./client', () => ({
   supabase: {
@@ -63,5 +63,46 @@ describe('trip repository expense persistence', () => {
       }),
     );
     expect(saved.createdBy).toBe('real-auth-user');
+  });
+
+  it('sends null percentages for an equal split', async () => {
+    const equalExpense: Expense = {
+      ...expense,
+      splitMethod: 'equal',
+      splits: expense.splits.map((split) => ({ ...split, percentageBasisPoints: null })),
+    };
+
+    await upsertRemoteExpense(equalExpense);
+
+    expect(client.rpc).toHaveBeenCalledWith(
+      'upsert_expense_with_splits',
+      expect.objectContaining({
+        p_splits: [expect.objectContaining({ share_minor: 101, percentage: null })],
+      }),
+    );
+  });
+});
+
+describe('trip repository trip deletion', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client.rpc.mockResolvedValue({ data: null, error: null });
+  });
+
+  it('deletes an owned trip through the atomic RPC', async () => {
+    const tripId = '00000000-0000-4000-8000-000000000010';
+
+    await deleteRemoteTrip(tripId);
+
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+    expect(client.rpc).toHaveBeenCalledWith('delete_owned_trip', { p_trip_id: tripId });
+  });
+
+  it('surfaces an RPC deletion failure', async () => {
+    client.rpc.mockResolvedValue({ data: null, error: { message: 'Delete failed' } });
+
+    await expect(deleteRemoteTrip('00000000-0000-4000-8000-000000000010')).rejects.toThrow(
+      'Delete failed',
+    );
   });
 });

@@ -191,7 +191,7 @@ export async function updateRemoteTrip(
   fail(error);
 }
 export async function deleteRemoteTrip(tripId: string): Promise<void> {
-  const { error } = await client().from('trips').delete().eq('id', tripId);
+  const { error } = await client().rpc('delete_owned_trip', { p_trip_id: tripId });
   fail(error);
 }
 export async function addRemoteMember(member: TripMember): Promise<TripMember> {
