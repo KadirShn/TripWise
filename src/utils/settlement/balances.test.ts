@@ -1,4 +1,4 @@
-import type { Expense } from '@/types/domain';
+import type { Expense, Settlement } from '@/types/domain';
 import { calculateBalances, simplifySettlements } from './balances';
 
 const expense: Expense = {
@@ -43,5 +43,40 @@ describe('balances and settlements', () => {
       { fromMemberId: 'd', toMemberId: 'b', amountMinor: 300 },
       { fromMemberId: 'd', toMemberId: 'a', amountMinor: 100 },
     ]);
+  });
+  it('applies paid settlements and ignores planned ones', () => {
+    const paid: Settlement = {
+      id: 'p1',
+      tripId: 't1',
+      fromMemberId: 'b',
+      toMemberId: 'a',
+      amountMinor: 116655,
+      currency: 'TRY',
+      status: 'paid',
+      paidAt: '2026-07-02T00:00:00Z',
+      createdAt: '2026-07-02T00:00:00Z',
+    };
+    const planned: Settlement = { ...paid, id: 'p2', fromMemberId: 'c', status: 'planned' };
+    const balances = calculateBalances(['a', 'b', 'c'], [expense], [paid, planned]);
+    expect(balances.reduce((sum, balance) => sum + balance.balanceMinor, 0)).toBe(0);
+    expect(balances.find((balance) => balance.memberId === 'b')?.balanceMinor).toBe(0);
+    expect(simplifySettlements(balances)).toEqual([
+      { fromMemberId: 'c', toMemberId: 'a', amountMinor: 116655 },
+    ]);
+  });
+  it('returns an empty plan once every transfer is paid', () => {
+    const initial = calculateBalances(['a', 'b', 'c'], [expense]);
+    const paid: Settlement[] = simplifySettlements(initial).map((transfer, index) => ({
+      id: `p${index}`,
+      tripId: 't1',
+      ...transfer,
+      currency: 'TRY',
+      status: 'paid',
+      paidAt: '2026-07-02T00:00:00Z',
+      createdAt: '2026-07-02T00:00:00Z',
+    }));
+    const settled = calculateBalances(['a', 'b', 'c'], [expense], paid);
+    expect(settled.every((balance) => balance.balanceMinor === 0)).toBe(true);
+    expect(simplifySettlements(settled)).toEqual([]);
   });
 });

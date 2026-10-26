@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/features/auth/auth-provider';
+import { shouldBlockOnSessionRestore } from '@/features/auth/session-bootstrap';
 import { useAppStore } from '@/stores/app-store';
 import { useAppTheme } from '@/theme/use-app-theme';
 
@@ -10,7 +11,7 @@ export default function BootstrapRoute() {
   const mode = useAppStore((state) => state.mode);
   const { isLoading } = useAuth();
   const { colors } = useAppTheme();
-  if (!hasHydrated || isLoading)
+  if (!hasHydrated || (isLoading && shouldBlockOnSessionRestore(mode)))
     return (
       <View
         style={{

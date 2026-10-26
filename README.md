@@ -46,6 +46,16 @@ TripWise, arkadaş gruplarının ve ailelerin gezi planlarken en çok zorlandı�
 - Gizlilik politikası ve hesap/veri silme ekranları
 - Android adaptive/monochrome ikonları ve markalı splash ekranı
 
+## 1.1 ile gelenler
+
+- **Borçları kapatma:** Ödeme planındaki transferleri “Ödendi” olarak işaretleyin, gerekirse geri alın; bakiyeler ve kalan plan anında güncellenir.
+- **Ödeme planını paylaşma:** Planı tek dokunuşla WhatsApp veya başka bir uygulamaya metin olarak gönderin.
+- **Davet koduyla katılma:** Gezi sahibi veya düzenleyiciler 8 karakterli, 14 gün geçerli bir davet kodu üretir. Arkadaşlar kodu girer ya da `tripwise://join/KOD` linkini açar. Daha önce isimle eklenmiş bir katılımcıyı sahiplenerek geçmiş harcamaları kendi hesaplarına bağlayabilirler.
+- **Roller:** Görüntüleyiciler düzenleme butonlarını görmez. Gezi düzenleme ve silme yalnızca sahibe açıktır, diğer üyeler geziden ayrılabilir.
+- **Güncel kur:** Harcama formundaki “Güncel kuru getir” düğmesi Avrupa Merkez Bankası referans kurunu ([Frankfurter](https://frankfurter.dev)) forma yazar. Kur düzenlenebilir ve harcama kaydedildiği kurla kalır.
+- **Dışa aktarma:** Gezi ayarlarından harcamaları Excel uyumlu CSV olarak veya bakiyeleri ve ödemeleri içeren PDF rapor olarak paylaşın.
+- **Demo verisini taşıma:** Demo modunda oluşturulan geziler, giriş yaptıktan sonra yeni kimliklerle hesaba kopyalanabilir.
+
 ## Tasarım yaklaşımı
 
 TripWise, klasik kurumsal finans uygulamalarından ayrılan seyahat odaklı bir tasarım sistemi kullanır. Sıcak günlük zemini; pasaport laciverti, mercan, gökyüzü, güneş, mor ve mint renkleriyle tamamlanır. Bento özet alanları, gezi posterleri ve zaman çizelgesi biçimindeki rota kartları hem açık hem koyu temada çalışır.
@@ -147,6 +157,19 @@ Migration’lar şu güvenlik ve bütünlük katmanlarını kurar:
 - Katılımcı, harcama ve bölüşüm satırlarında aynı gezi doğrulaması
 - Yeni kullanıcı için profil oluşturma trigger’ı
 - Hesap silme öncesi ilişkili verileri güvenle hazırlayan RPC
+- Davet kodu üretme, önizleme, katılma ve geziden ayrılma RPC'leri (`202610260001_trip_invites.sql`)
+- Bir hesabı katılımcı satırına yalnızca davet RPC'si üzerinden bağlayan, sahip satırını düzenleyicilere kapatan üyelik politikaları
+
+### Yayındaki projeyi 1.1'e güncelleme
+
+Yeni migration'ı **uygulama sürümünü yayınlamadan önce** uygulayın:
+
+```powershell
+npx supabase db push
+npx supabase functions deploy delete-account
+```
+
+Migration 1.0 istemcileriyle geriye uyumludur. Eski sürümün kullandığı katılımcı ekleme ve düzenleme yolları çalışmaya devam eder. 1.1 istemcisi ise davet RPC'leri olmadan davet özelliklerini kullanamaz.
 
 ### Hesap silme fonksiyonu
 
@@ -211,10 +234,11 @@ npx eas-cli@latest build --platform android --profile preview
 
 ## Bilinen MVP sınırları
 
-- Canlı çok kullanıcılı eşzamanlı düzenleme bulunmaz.
-- Otomatik döviz kuru servisi yoktur; kur kullanıcı tarafından girilir.
+- Canlı çok kullanıcılı eşzamanlı düzenleme bulunmaz. Diğer üyelerin değişiklikleri ekran yenilendiğinde veya uygulamaya dönüldüğünde görünür.
+- Otomatik kur yalnızca Avrupa Merkez Bankası'nın yayımladığı yaklaşık 30 para birimi için çalışır. Diğerlerinde kur elle girilir.
+- Davet linki `tripwise://` şemasını kullanır. Uygulama yüklü değilse link açılmaz, bu yüzden paylaşım mesajında kod ve Play Store linki de bulunur.
 - Authenticated çevrimdışı mutasyon kuyruğu yoktur.
-- Push notification, QR davet, OCR, dışa aktarma, reklam ve abonelik MVP dışındadır.
+- Push notification, QR davet, OCR, reklam ve abonelik henüz yoktur.
 
 Planlanan ancak henüz uygulanmayan özellikler için [`BACKLOG.md`](BACKLOG.md) dosyasına bakın.
 

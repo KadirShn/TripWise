@@ -57,6 +57,8 @@ export default function RootLayout() {
               options={{ presentation: 'modal', title: t('trips.formNew') }}
             />
             <Stack.Screen name="trip/[tripId]" options={{ headerShown: false }} />
+            <Stack.Screen name="join/index" options={{ title: t('invites.joinTitle') }} />
+            <Stack.Screen name="join/[code]" options={{ title: t('invites.joinTitle') }} />
             <Stack.Screen name="+not-found" options={{ title: t('common.error') }} />
           </Stack>
         </ThemeProvider>

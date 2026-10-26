@@ -10,13 +10,11 @@ import { DEMO_USER_ID } from '@/constants/demo-data';
 import { getTripDataErrorKey } from '@/features/data/errors';
 import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
 import { useTripData } from '@/features/data/use-trip-data';
+import { fetchExchangeRate } from '@/lib/exchange/exchange-rates';
 import type { ExpenseCategory, SplitMethod } from '@/types/domain';
 import { useAppTheme } from '@/theme/use-app-theme';
-import {
-  getCurrencyFractionDigits,
-  parseMoney,
-  parsePercentageToBasisPoints,
-} from '@/utils/money/money';
+import { formatDateOnly } from '@/utils/dates/format';
+import { formatMinorForInput, parseMoney, parsePercentageToBasisPoints } from '@/utils/money/money';
 import { splitByPercentage, splitEqually, validateExactSplit } from '@/utils/money/splits';
 import { ExpenseSplitFields } from './expense-split-fields';
 
@@ -39,10 +37,6 @@ const categories: ExpenseCategory[] = [
   'shopping',
   'other',
 ];
-const minorInput = (value: number, currency: string) =>
-  (value / 10 ** getCurrencyFractionDigits(currency))
-    .toFixed(getCurrencyFractionDigits(currency))
-    .replace('.', ',');
 const parseRate = (value: string): number | null => {
   const normalized = value.trim().replace(',', '.');
   if (!/^\d+(?:\.\d{1,6})?$/.test(normalized)) return null;
@@ -53,7 +47,7 @@ const parseRate = (value: string): number | null => {
 
 export function ExpenseFormScreen() {
   const { tripId, expenseId } = useLocalSearchParams<{ tripId: string; expenseId?: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { colors } = useAppTheme();
   const data = useTripData();
@@ -69,7 +63,7 @@ export function ExpenseFormScreen() {
     Object.fromEntries(
       existing?.splits.map((split) => [
         split.memberId,
-        minorInput(split.shareMinor, existing.currency),
+        formatMinorForInput(split.shareMinor, existing.currency),
       ]) ?? [],
     ),
   );
@@ -87,12 +81,14 @@ export function ExpenseFormScreen() {
     control,
     handleSubmit,
     setError,
+    setValue,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: existing?.title ?? '',
-      amount: existing ? minorInput(existing.amountMinor, existing.currency) : '',
+      amount: existing ? formatMinorForInput(existing.amountMinor, existing.currency) : '',
       currency: existing?.currency ?? trip?.baseCurrency ?? 'TRY',
       exchangeRate: existing
         ? String(existing.exchangeRateMillionths / 1_000_000).replace('.', ',')
@@ -104,6 +100,27 @@ export function ExpenseFormScreen() {
     },
   });
   const currency = useWatch({ control, name: 'currency' }).toUpperCase();
+  const [rateStatus, setRateStatus] = useState<
+    { kind: 'loading' } | { kind: 'ok'; date: string } | { kind: 'unsupported' | 'failed' } | null
+  >(null);
+  const fillExchangeRate = async () => {
+    if (!trip || rateStatus?.kind === 'loading') return;
+    setRateStatus({ kind: 'loading' });
+    const result = await fetchExchangeRate(currency, trip.baseCurrency);
+    if (result.status !== 'ok') {
+      setRateStatus({ kind: result.status });
+      return;
+    }
+    const whole = Math.floor(result.rateMillionths / 1_000_000);
+    const fraction = String(result.rateMillionths % 1_000_000)
+      .padStart(6, '0')
+      .replace(/0+$/, '');
+    setValue('exchangeRate', fraction ? `${whole},${fraction}` : String(whole), {
+      shouldDirty: true,
+    });
+    clearErrors('exchangeRate');
+    setRateStatus({ kind: 'ok', date: result.date });
+  };
   const participantOptions = useMemo(
     () => members.map((member) => ({ value: member.id, label: member.displayName })),
     [members],
@@ -243,6 +260,27 @@ export function ExpenseFormScreen() {
             />
           )}
         />
+      ) : null}
+      {currency !== trip.baseCurrency && /^[A-Z]{3}$/.test(currency) ? (
+        <>
+          <Button
+            variant="secondary"
+            icon="currency-usd"
+            label={t('exchange.fetch')}
+            loading={rateStatus?.kind === 'loading'}
+            onPress={() => void fillExchangeRate()}
+          />
+          {rateStatus && rateStatus.kind !== 'loading' ? (
+            <AppText
+              variant="caption"
+              style={{ color: rateStatus.kind === 'ok' ? colors.textMuted : colors.danger }}
+            >
+              {rateStatus.kind === 'ok'
+                ? t('exchange.fetched', { date: formatDateOnly(rateStatus.date, i18n.language) })
+                : t(`exchange.${rateStatus.kind}`)}
+            </AppText>
+          ) : null}
+        </>
       ) : null}
       <Controller
         control={control}

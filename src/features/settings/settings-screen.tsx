@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -133,7 +134,7 @@ export function SettingsScreen() {
         </View>
       </Card>
       <AppText variant="caption" style={{ color: colors.textMuted, textAlign: 'center' }}>
-        {t('settings.about')}
+        {t('settings.about', { version: Constants.expoConfig?.version ?? '' })}
       </AppText>
     </Screen>
   );

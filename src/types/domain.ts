@@ -98,4 +98,22 @@ export interface TripBundle {
   members: TripMember[];
   expenses: Expense[];
   itineraryItems: ItineraryItem[];
+  settlements: Settlement[];
+}
+
+export interface TripInvite {
+  code: string;
+  tripId: Id;
+  role: Exclude<MemberRole, 'owner'>;
+  expiresAt: string;
+}
+
+export interface InvitePreview {
+  tripId: Id;
+  tripTitle: string;
+  destination: string;
+  coverEmoji: string;
+  role: Exclude<MemberRole, 'owner'>;
+  alreadyMember: boolean;
+  unclaimedMembers: { id: Id; displayName: string }[];
 }

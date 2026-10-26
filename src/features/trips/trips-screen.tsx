@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { differenceInCalendarDays } from 'date-fns';
 import { Link, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -15,7 +16,9 @@ import {
   Skeleton,
   TravelHero,
 } from '@/components/ui';
+import { GuestImportCard } from '@/features/data/guest-import-card';
 import { useTripData } from '@/features/data/use-trip-data';
+import { useAppStore } from '@/stores/app-store';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 import { formatShortDate } from '@/utils/dates/format';
@@ -24,8 +27,16 @@ import { TripCoverEmoji } from './trip-cover-emoji';
 export function TripsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { trips, expenses, isLoading, error, refetch } = useTripData();
+  const { trips, expenses, isLoading, error, refetch, mode } = useTripData();
   const { colors } = useAppTheme();
+  const pendingInviteCode = useAppStore((state) => state.pendingInviteCode);
+  const setPendingInviteCode = useAppStore((state) => state.setPendingInviteCode);
+  // Resume an invite link that was opened before signing in.
+  useEffect(() => {
+    if (mode !== 'authenticated' || !pendingInviteCode) return;
+    setPendingInviteCode(null);
+    router.push({ pathname: '/join/[code]', params: { code: pendingInviteCode } });
+  }, [mode, pendingInviteCode, router, setPendingInviteCode]);
   if (isLoading)
     return (
       <Screen>
@@ -59,13 +70,22 @@ export function TripsScreen() {
         title={t('trips.heroTitle')}
         description={t('trips.heroDescription')}
       >
-        <Button
-          label={t('trips.new')}
-          icon="plus"
-          style={{ alignSelf: 'flex-start', backgroundColor: colors.coral }}
-          onPress={() => router.push('/trip/new')}
-        />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          <Button
+            label={t('trips.new')}
+            icon="plus"
+            style={{ backgroundColor: colors.coral }}
+            onPress={() => router.push('/trip/new')}
+          />
+          <Button
+            variant="secondary"
+            label={t('invites.joinEntry')}
+            icon="ticket-confirmation-outline"
+            onPress={() => router.push('/join')}
+          />
+        </View>
       </TravelHero>
+      {mode === 'authenticated' ? <GuestImportCard /> : null}
       {trips.length === 0 ? (
         <EmptyState
           title={t('trips.emptyTitle')}

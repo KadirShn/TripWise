@@ -117,17 +117,40 @@ const main = async () => {
     if (hiddenFromB.data?.length !== 0)
       throw new Error('User B saw a private trip before membership');
 
+    const directLink = await clientA.from('trip_members').insert({
+      id: randomUUID(),
+      trip_id: tripA,
+      user_id: authB.user.id,
+      display_name: 'Linked without consent',
+      role: 'viewer',
+    });
+    assertDenied('Owner linking another account without an invite', directLink.error);
+
     assertNoError(
-      'Add user B as viewer',
+      'Add unlinked viewer placeholder',
       (
         await clientA.from('trip_members').insert({
           id: viewerB,
           trip_id: tripA,
-          user_id: authB.user.id,
           display_name: 'Viewer B',
           role: 'viewer',
         })
       ).error,
+    );
+    const invite = await clientA.rpc('create_trip_invite', { p_trip_id: tripA, p_role: 'viewer' });
+    assertNoError('Create viewer invite', invite.error);
+    const inviteCode = invite.data?.[0]?.code;
+    if (!inviteCode) throw new Error('Invite RPC returned no code');
+    const viewerInvite = await clientB.rpc('create_trip_invite', {
+      p_trip_id: tripA,
+      p_role: 'editor',
+    });
+    assertDenied('Non-member creating an invite', viewerInvite.error);
+    const preview = await clientB.rpc('get_invite_preview', { p_code: inviteCode });
+    assertNoError('Preview invite as user B', preview.error);
+    assertNoError(
+      'Join as user B by claiming the placeholder',
+      (await clientB.rpc('accept_trip_invite', { p_code: inviteCode, p_member_id: viewerB })).error,
     );
     const visibleToB = await clientB.from('trips').select('id').eq('id', tripA);
     assertNoError('Read member trip as user B', visibleToB.error);

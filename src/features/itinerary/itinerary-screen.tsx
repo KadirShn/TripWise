@@ -24,7 +24,8 @@ import type { ItineraryItem } from '@/types/domain';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 import { calendarDateKey, formatDateOnly, formatTime } from '@/utils/dates/format';
-import { parseMoney } from '@/utils/money/money';
+import { formatMinorForInput, parseMoney } from '@/utils/money/money';
+import { ViewerNotice } from '@/features/trips/viewer-notice';
 
 const validDateTime = (value: string) => !Number.isNaN(Date.parse(value));
 const schema = z
@@ -59,6 +60,7 @@ export function ItineraryScreen() {
     .filter((item) => item.tripId === tripId)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const { addItineraryItem: add, updateItineraryItem: update, deleteItineraryItem: remove } = data;
+  const canEdit = data.myRole(tripId) !== 'viewer';
   const [editing, setEditing] = useState<ItineraryItem | 'new' | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const {
@@ -97,9 +99,10 @@ export function ItineraryScreen() {
             startsAt: item.startsAt,
             endsAt: item.endsAt ?? '',
             notes: item.notes ?? '',
-            estimatedCost: item.estimatedCostMinor
-              ? String(item.estimatedCostMinor / 100).replace('.', ',')
-              : '',
+            estimatedCost:
+              item.estimatedCostMinor && trip
+                ? formatMinorForInput(item.estimatedCostMinor, trip.baseCurrency)
+                : '',
           },
     );
   };
@@ -162,12 +165,16 @@ export function ItineraryScreen() {
   if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
-      <Button
-        label={t('itinerary.add')}
-        icon="map-marker-plus-outline"
-        onPress={() => open('new')}
-      />
-      {editing ? (
+      {canEdit ? (
+        <Button
+          label={t('itinerary.add')}
+          icon="map-marker-plus-outline"
+          onPress={() => open('new')}
+        />
+      ) : (
+        <ViewerNotice />
+      )}
+      {editing && canEdit ? (
         <Card>
           <AppText variant="subtitle">
             {editing === 'new' ? t('itinerary.add') : t('itinerary.edit')}
@@ -270,8 +277,8 @@ export function ItineraryScreen() {
         <EmptyState
           title={t('itinerary.emptyTitle')}
           description={t('itinerary.emptyDescription')}
-          actionLabel={t('itinerary.add')}
-          onAction={() => open('new')}
+          actionLabel={canEdit ? t('itinerary.add') : undefined}
+          onAction={canEdit ? () => open('new') : undefined}
         />
       ) : (
         Object.entries(groups).map(([date, dayItems], groupIndex) => (
@@ -296,7 +303,12 @@ export function ItineraryScreen() {
               </AppText>
             </View>
             {dayItems.map((item, itemIndex) => (
-              <Pressable key={item.id} disabled={deletingId !== null} onPress={() => open(item)}>
+              <Pressable
+                key={item.id}
+                accessibilityRole={canEdit ? 'button' : undefined}
+                disabled={deletingId !== null || !canEdit}
+                onPress={() => open(item)}
+              >
                 <Card
                   style={{
                     backgroundColor: itemIndex % 2 === 0 ? colors.skySoft : colors.mintSoft,
@@ -331,27 +343,30 @@ export function ItineraryScreen() {
                         />
                       ) : null}
                     </View>
-                    <Pressable
-                      accessibilityLabel={t('common.delete')}
-                      hitSlop={8}
-                      disabled={deletingId !== null}
-                      onPress={(event) => {
-                        event.stopPropagation();
-                        confirmDelete(item);
-                      }}
-                      style={{
-                        width: 44,
-                        height: 44,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <MaterialCommunityIcons
-                        name="trash-can-outline"
-                        size={21}
-                        color={deletingId === item.id ? colors.textMuted : colors.danger}
-                      />
-                    </Pressable>
+                    {canEdit ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.delete')}
+                        hitSlop={8}
+                        disabled={deletingId !== null}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          confirmDelete(item);
+                        }}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name="trash-can-outline"
+                          size={21}
+                          color={deletingId === item.id ? colors.textMuted : colors.danger}
+                        />
+                      </Pressable>
+                    ) : null}
                   </View>
                 </Card>
               </Pressable>

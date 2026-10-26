@@ -1,4 +1,4 @@
-import type { Expense, Id, MemberBalance, SettlementTransfer } from '@/types/domain';
+import type { Expense, Id, MemberBalance, Settlement, SettlementTransfer } from '@/types/domain';
 
 const RATE_SCALE = 1_000_000n;
 
@@ -18,7 +18,15 @@ function convertedShares(expense: Expense): { memberId: Id; amountMinor: number 
   return values;
 }
 
-export function calculateBalances(memberIds: Id[], expenses: Expense[]): MemberBalance[] {
+/**
+ * Paid settlements are recorded in the trip base currency. A payment from a debtor
+ * to a creditor moves both balances toward zero, so the remaining plan shrinks.
+ */
+export function calculateBalances(
+  memberIds: Id[],
+  expenses: Expense[],
+  settlements: Settlement[] = [],
+): MemberBalance[] {
   const balances = new Map(memberIds.map((memberId) => [memberId, 0]));
   for (const expense of expenses) {
     const converted = convertedShares(expense);
@@ -27,6 +35,17 @@ export function calculateBalances(memberIds: Id[], expenses: Expense[]): MemberB
     for (const share of converted) {
       balances.set(share.memberId, (balances.get(share.memberId) ?? 0) - share.amountMinor);
     }
+  }
+  for (const settlement of settlements) {
+    if (settlement.status !== 'paid') continue;
+    balances.set(
+      settlement.fromMemberId,
+      (balances.get(settlement.fromMemberId) ?? 0) + settlement.amountMinor,
+    );
+    balances.set(
+      settlement.toMemberId,
+      (balances.get(settlement.toMemberId) ?? 0) - settlement.amountMinor,
+    );
   }
   return [...balances.entries()].map(([memberId, balanceMinor]) => ({ memberId, balanceMinor }));
 }

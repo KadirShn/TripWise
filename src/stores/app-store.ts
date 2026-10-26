@@ -8,30 +8,38 @@ import {
   demoTrips,
   DEMO_USER_ID,
 } from '@/constants/demo-data';
-import type { Expense, Id, ItineraryItem, Trip, TripMember } from '@/types/domain';
+import { i18n } from '@/lib/i18n';
+import type { Expense, Id, ItineraryItem, Settlement, Trip, TripMember } from '@/types/domain';
 import type { ThemePreference } from '@/theme/theme';
 import { appLocalStorage } from '@/lib/storage/local-storage';
 
-type AppMode = 'none' | 'guest' | 'authenticated';
+export type AppMode = 'none' | 'guest' | 'authenticated';
 export type AppLanguage = 'tr' | 'en';
 type NewTrip = Omit<Trip, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>;
 type NewMember = Omit<TripMember, 'id' | 'createdAt'>;
 type NewItinerary = Omit<ItineraryItem, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewSettlement = Omit<Settlement, 'id' | 'createdAt' | 'status' | 'paidAt'>;
 
 interface AppState {
   hasHydrated: boolean;
   onboardingCompleted: boolean;
   mode: AppMode;
+  // Last signed-in user, kept so cached trips stay keyed correctly while the session
+  // cannot be refreshed (for example when launching offline with an expired token).
+  authUserId: string | null;
   themePreference: ThemePreference;
   language: AppLanguage;
   trips: Trip[];
   members: TripMember[];
   expenses: Expense[];
   itineraryItems: ItineraryItem[];
+  settlements: Settlement[];
+  pendingInviteCode: string | null;
+  setPendingInviteCode: (code: string | null) => void;
   setHasHydrated: (value: boolean) => void;
   completeOnboarding: () => void;
   enterGuest: () => void;
-  enterAuthenticated: () => void;
+  enterAuthenticated: (userId: string) => void;
   signOut: () => void;
   setThemePreference: (value: ThemePreference) => void;
   setLanguage: (value: AppLanguage) => void;
@@ -47,6 +55,9 @@ interface AppState {
   addItineraryItem: (item: NewItinerary) => Promise<Id>;
   updateItineraryItem: (itemId: Id, patch: Partial<NewItinerary>) => Promise<void>;
   deleteItineraryItem: (itemId: Id) => Promise<void>;
+  recordSettlement: (settlement: NewSettlement) => Promise<Id>;
+  deleteSettlement: (settlementId: Id) => Promise<void>;
+  clearLocalTrips: () => void;
 }
 
 const now = () => new Date().toISOString();
@@ -58,7 +69,15 @@ const seed = () => ({
     splits: expense.splits.map((split) => ({ ...split })),
   })),
   itineraryItems: demoItineraryItems.map((item) => ({ ...item })),
+  settlements: [] as Settlement[],
 });
+const emptyTrips = {
+  trips: [],
+  members: [],
+  expenses: [],
+  itineraryItems: [],
+  settlements: [],
+};
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -66,21 +85,25 @@ export const useAppStore = create<AppState>()(
       hasHydrated: false,
       onboardingCompleted: false,
       mode: 'none',
+      authUserId: null,
       themePreference: 'system',
       language: 'tr',
       trips: [],
       members: [],
       expenses: [],
       itineraryItems: [],
+      settlements: [],
+      pendingInviteCode: null,
+      setPendingInviteCode: (pendingInviteCode) => set({ pendingInviteCode }),
       setHasHydrated: (value) => set({ hasHydrated: value }),
       completeOnboarding: () => set({ onboardingCompleted: true }),
       enterGuest: () => set((state) => ({ mode: 'guest', ...(state.trips.length ? {} : seed()) })),
-      enterAuthenticated: () => set({ mode: 'authenticated' }),
+      enterAuthenticated: (authUserId) => set({ mode: 'authenticated', authUserId }),
       signOut: () =>
         set((state) =>
           state.mode === 'authenticated'
-            ? { mode: 'none', trips: [], members: [], expenses: [], itineraryItems: [] }
-            : { mode: 'none' },
+            ? { mode: 'none', authUserId: null, ...emptyTrips }
+            : { mode: 'none', authUserId: null },
         ),
       setThemePreference: (themePreference) => set({ themePreference }),
       setLanguage: (language) => set({ language }),
@@ -99,7 +122,7 @@ export const useAppStore = create<AppState>()(
           id: randomUUID(),
           tripId: id,
           userId: DEMO_USER_ID,
-          displayName: 'Ben',
+          displayName: i18n.t('participants.me'),
           email: null,
           role: 'owner',
           createdAt: timestamp,
@@ -124,6 +147,7 @@ export const useAppStore = create<AppState>()(
           members: state.members.filter((member) => member.tripId !== tripId),
           expenses: state.expenses.filter((expense) => expense.tripId !== tripId),
           itineraryItems: state.itineraryItems.filter((item) => item.tripId !== tripId),
+          settlements: state.settlements.filter((item) => item.tripId !== tripId),
         }));
       },
       addMember: async (input) => {
@@ -141,11 +165,17 @@ export const useAppStore = create<AppState>()(
         }));
       },
       deleteMember: async (memberId) => {
-        const isUsed = get().expenses.some(
-          (expense) =>
-            expense.paidByMemberId === memberId ||
-            expense.splits.some((split) => split.memberId === memberId),
-        );
+        const { expenses, settlements } = get();
+        const isUsed =
+          expenses.some(
+            (expense) =>
+              expense.paidByMemberId === memberId ||
+              expense.splits.some((split) => split.memberId === memberId),
+          ) ||
+          settlements.some(
+            (settlement) =>
+              settlement.fromMemberId === memberId || settlement.toMemberId === memberId,
+          );
         if (isUsed) throw new Error('MEMBER_IN_USE');
         set((state) => ({ members: state.members.filter((member) => member.id !== memberId) }));
       },
@@ -182,6 +212,25 @@ export const useAppStore = create<AppState>()(
           itineraryItems: state.itineraryItems.filter((item) => item.id !== itemId),
         }));
       },
+      recordSettlement: async (input) => {
+        const id = randomUUID();
+        const timestamp = now();
+        const settlement: Settlement = {
+          ...input,
+          id,
+          status: 'paid',
+          paidAt: timestamp,
+          createdAt: timestamp,
+        };
+        set((state) => ({ settlements: [...state.settlements, settlement] }));
+        return id;
+      },
+      deleteSettlement: async (settlementId) => {
+        set((state) => ({
+          settlements: state.settlements.filter((item) => item.id !== settlementId),
+        }));
+      },
+      clearLocalTrips: () => set(emptyTrips),
     }),
     {
       name: 'tripwise-app-v1',

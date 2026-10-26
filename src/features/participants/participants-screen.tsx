@@ -9,6 +9,7 @@ import { z } from 'zod';
 import {
   AppText,
   Avatar,
+  Badge,
   Button,
   Card,
   EmptyState,
@@ -19,6 +20,8 @@ import {
 import { useTripData } from '@/features/data/use-trip-data';
 import { getTripDataErrorKey } from '@/features/data/errors';
 import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
+import { InviteCard } from '@/features/invites/invite-card';
+import { ViewerNotice } from '@/features/trips/viewer-notice';
 import type { MemberRole, TripMember } from '@/types/domain';
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
@@ -34,7 +37,9 @@ export function ParticipantsScreen() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
   const data = useTripData();
+  const trip = data.trips.find((item) => item.id === tripId);
   const members = data.members.filter((member) => member.tripId === tripId);
+  const canEdit = data.myRole(tripId) !== 'viewer';
   const { addMember: add, updateMember: update, deleteMember: remove } = data;
   const [editing, setEditing] = useState<TripMember | 'new' | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -64,13 +69,12 @@ export function ParticipantsScreen() {
     try {
       const input = {
         tripId,
-        userId: null,
         displayName: values.displayName.trim(),
         email: values.email || null,
         role: values.role as MemberRole,
       };
       if (editing !== 'new' && editing) await update(editing.id, input);
-      else await add(input);
+      else await add({ ...input, userId: null });
       setEditing(null);
     } catch (error) {
       setError('root', { message: t(getTripDataErrorKey(error)) });
@@ -102,12 +106,19 @@ export function ParticipantsScreen() {
   if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
-      <Button
-        label={t('participants.add')}
-        icon="account-plus-outline"
-        onPress={() => open('new')}
-      />
-      {editing ? (
+      {canEdit ? (
+        <>
+          {trip ? <InviteCard trip={trip} /> : null}
+          <Button
+            label={t('participants.add')}
+            icon="account-plus-outline"
+            onPress={() => open('new')}
+          />
+        </>
+      ) : (
+        <ViewerNotice />
+      )}
+      {editing && canEdit ? (
         <Card>
           <AppText variant="subtitle">
             {editing === 'new' ? t('participants.add') : t('participants.edit')}
@@ -134,7 +145,7 @@ export function ParticipantsScreen() {
                 onChangeText={field.onChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                error={errors.email ? t('auth.genericError') : undefined}
+                error={errors.email ? t('participants.invalidEmail') : undefined}
               />
             )}
           />
@@ -180,8 +191,8 @@ export function ParticipantsScreen() {
           <Pressable
             key={member.id}
             accessibilityRole="button"
-            disabled={deletingId !== null}
-            onPress={() => member.role !== 'owner' && open(member)}
+            disabled={deletingId !== null || !canEdit || member.role === 'owner'}
+            onPress={() => open(member)}
           >
             <Card
               style={{
@@ -202,10 +213,15 @@ export function ParticipantsScreen() {
                     {member.email ?? t(`participants.${member.role}`)}
                   </AppText>
                 </View>
-                <AppText variant="caption" style={{ color: colors.primary }}>
-                  {t(`participants.${member.role}`)}
-                </AppText>
-                {member.role !== 'owner' ? (
+                <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                  <AppText variant="caption" style={{ color: colors.primary }}>
+                    {t(`participants.${member.role}`)}
+                  </AppText>
+                  {member.userId && data.mode === 'authenticated' ? (
+                    <Badge label={t('participants.linked')} tone="neutral" />
+                  ) : null}
+                </View>
+                {member.role !== 'owner' && canEdit ? (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t('common.delete')}

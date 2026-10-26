@@ -1,4 +1,4 @@
-import { formatMoney, getCurrencyFractionDigits, parseMoney } from './money';
+import { formatMinorForInput, formatMoney, getCurrencyFractionDigits, parseMoney } from './money';
 
 describe('money helpers', () => {
   it('parses Turkish decimal input into minor units', () => {
@@ -14,5 +14,10 @@ describe('money helpers', () => {
   it('rejects unsafe or over-precise values', () => {
     expect(parseMoney('1,001', 'TRY')).toBeNull();
     expect(parseMoney('abc', 'TRY')).toBeNull();
+  });
+  it('formats minor units for editable inputs and round-trips through parsing', () => {
+    expect(formatMinorForInput(12345, 'TRY')).toBe('123,45');
+    expect(formatMinorForInput(1500, 'JPY')).toBe('1500');
+    expect(parseMoney(formatMinorForInput(987654, 'EUR'), 'EUR')).toBe(987654);
   });
 });
