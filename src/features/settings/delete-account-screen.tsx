@@ -23,6 +23,7 @@ export function DeleteAccountScreen() {
   const accountItems = [
     t('legal.deleteConsequences.account'),
     t('legal.deleteConsequences.trips'),
+    t('legal.deleteConsequences.shared'),
     t('legal.deleteConsequences.local'),
   ];
 

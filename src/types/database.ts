@@ -74,7 +74,7 @@ export interface Database {
         Row: {
           id: string;
           trip_id: string;
-          created_by: string;
+          created_by: string | null;
           paid_by_member_id: string;
           title: string;
           notes: string | null;
@@ -126,7 +126,7 @@ export interface Database {
         Row: {
           id: string;
           trip_id: string;
-          created_by: string;
+          created_by: string | null;
           title: string;
           notes: string | null;
           location_name: string | null;
@@ -177,9 +177,40 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['settlements']['Insert']>;
         Relationships: [];
       };
+      trip_invites: {
+        Row: {
+          id: string;
+          trip_id: string;
+          code: string;
+          role: 'owner' | 'editor' | 'viewer';
+          created_by: string;
+          expires_at: string;
+          revoked_at: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: { revoked_at?: string | null };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      accept_trip_invite: {
+        Args: { p_code: string; p_member_id?: string | null };
+        Returns: string;
+      };
+      create_trip_invite: {
+        Args: { p_trip_id: string; p_role?: 'owner' | 'editor' | 'viewer' };
+        Returns: { code: string; expires_at: string }[];
+      };
+      get_invite_preview: {
+        Args: { p_code: string };
+        Returns: Json;
+      };
+      leave_trip: {
+        Args: { p_trip_id: string };
+        Returns: undefined;
+      };
       delete_owned_trip: {
         Args: { p_trip_id: string };
         Returns: undefined;

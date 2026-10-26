@@ -6,33 +6,48 @@ import { AppText, Button, Card, Screen } from '@/components/ui';
 import { useTripData } from '@/features/data/use-trip-data';
 import { getTripDataErrorKey } from '@/features/data/errors';
 import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip-data-state';
+import { ExportCard } from '@/features/export/export-card';
 import { useAppTheme } from '@/theme/use-app-theme';
+import { useLocalTrip } from './use-local-trip';
+import { ViewerNotice } from './viewer-notice';
+
 export function TripSettingsScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
   const { t } = useTranslation();
   const router = useRouter();
-  const data = useTripData();
-  const trip = data.trips.find((item) => item.id === tripId);
-  const remove = data.deleteTrip;
+  const { bundle, isLoading, error, refetch, role } = useLocalTrip(tripId);
+  const { deleteTrip, leaveTrip } = useTripData();
   const { colors } = useAppTheme();
-  const [isDeleting, setDeleting] = useState(false);
-  if (data.isLoading) return <TripDataLoadingScreen />;
-  if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
-  if (!trip) return null;
+  const [isBusy, setBusy] = useState(false);
+  if (isLoading) return <TripDataLoadingScreen />;
+  if (error) return <TripDataErrorScreen onRetry={() => void refetch()} />;
+  if (!bundle) return null;
+  const { trip } = bundle;
+  const isOwner = role === 'owner';
+  const runAndGoHome = (action: () => Promise<void>) => {
+    if (isBusy) return;
+    setBusy(true);
+    void action()
+      .then(() => router.replace('/(tabs)/(trips)'))
+      .catch((cause: unknown) => Alert.alert(t('common.error'), t(getTripDataErrorKey(cause))))
+      .finally(() => setBusy(false));
+  };
   const confirmDelete = () =>
     Alert.alert(t('trips.deleteTitle'), t('trips.deleteDescription'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('common.delete'),
         style: 'destructive',
-        onPress: () => {
-          if (isDeleting) return;
-          setDeleting(true);
-          void remove(tripId)
-            .then(() => router.replace('/(tabs)/(trips)'))
-            .catch((error) => Alert.alert(t('common.error'), t(getTripDataErrorKey(error))))
-            .finally(() => setDeleting(false));
-        },
+        onPress: () => runAndGoHome(() => deleteTrip(tripId)),
+      },
+    ]);
+  const confirmLeave = () =>
+    Alert.alert(t('invites.leaveTitle'), t('invites.leaveBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('invites.leave'),
+        style: 'destructive',
+        onPress: () => runAndGoHome(() => leaveTrip(tripId)),
       },
     ]);
   return (
@@ -41,19 +56,35 @@ export function TripSettingsScreen() {
         <AppText variant="title">{trip.title}</AppText>
         <AppText style={{ color: colors.textMuted }}>{trip.destination}</AppText>
       </Card>
-      <Button
-        label={t('common.edit')}
-        icon="pencil-outline"
-        disabled={isDeleting}
-        onPress={() => router.push(`/trip/${tripId}/edit` as never)}
-      />
-      <Button
-        variant="danger"
-        label={t('common.delete')}
-        icon="trash-can-outline"
-        loading={isDeleting}
-        onPress={confirmDelete}
-      />
+      <ExportCard bundle={bundle} />
+      {isOwner ? (
+        <>
+          <Button
+            label={t('common.edit')}
+            icon="pencil-outline"
+            disabled={isBusy}
+            onPress={() => router.push(`/trip/${tripId}/edit` as never)}
+          />
+          <Button
+            variant="danger"
+            label={t('common.delete')}
+            icon="trash-can-outline"
+            loading={isBusy}
+            onPress={confirmDelete}
+          />
+        </>
+      ) : (
+        <>
+          <ViewerNotice message={t('permissions.ownerOnly')} />
+          <Button
+            variant="danger"
+            label={t('invites.leave')}
+            icon="exit-run"
+            loading={isBusy}
+            onPress={confirmLeave}
+          />
+        </>
+      )}
     </Screen>
   );
 }

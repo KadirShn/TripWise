@@ -1,5 +1,14 @@
 import type { Database, Json } from '@/types/database';
-import type { Expense, ExpenseCategory, ItineraryItem, Trip, TripMember } from '@/types/domain';
+import type {
+  Expense,
+  ExpenseCategory,
+  InvitePreview,
+  ItineraryItem,
+  Settlement,
+  Trip,
+  TripInvite,
+  TripMember,
+} from '@/types/domain';
 import { supabase } from './client';
 
 type TripRow = Database['public']['Tables']['trips']['Row'];
@@ -7,12 +16,14 @@ type MemberRow = Database['public']['Tables']['trip_members']['Row'];
 type ExpenseRow = Database['public']['Tables']['expenses']['Row'];
 type SplitRow = Database['public']['Tables']['expense_splits']['Row'];
 type ItineraryRow = Database['public']['Tables']['itinerary_items']['Row'];
+type SettlementRow = Database['public']['Tables']['settlements']['Row'];
 
 export interface RemoteSnapshot {
   trips: Trip[];
   members: TripMember[];
   expenses: Expense[];
   itineraryItems: ItineraryItem[];
+  settlements: Settlement[];
 }
 const client = () => {
   if (!supabase) throw new Error('SUPABASE_NOT_CONFIGURED');
@@ -51,7 +62,7 @@ const mapMember = (row: MemberRow): TripMember => ({
 const mapItinerary = (row: ItineraryRow): ItineraryItem => ({
   id: row.id,
   tripId: row.trip_id,
-  createdBy: row.created_by,
+  createdBy: row.created_by ?? '',
   title: row.title,
   notes: row.notes,
   locationName: row.location_name,
@@ -62,10 +73,21 @@ const mapItinerary = (row: ItineraryRow): ItineraryItem => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+const mapSettlement = (row: SettlementRow): Settlement => ({
+  id: row.id,
+  tripId: row.trip_id,
+  fromMemberId: row.from_member_id,
+  toMemberId: row.to_member_id,
+  amountMinor: row.amount_minor,
+  currency: row.currency,
+  status: row.status,
+  paidAt: row.paid_at,
+  createdAt: row.created_at,
+});
 const mapExpense = (row: ExpenseRow, splits: SplitRow[]): Expense => ({
   id: row.id,
   tripId: row.trip_id,
-  createdBy: row.created_by,
+  createdBy: row.created_by ?? '',
   paidByMemberId: row.paid_by_member_id,
   title: row.title,
   notes: row.notes,
@@ -89,27 +111,22 @@ const mapExpense = (row: ExpenseRow, splits: SplitRow[]): Expense => ({
   updatedAt: row.updated_at,
 });
 
-export async function fetchRemoteSnapshot(): Promise<RemoteSnapshot> {
-  const { data: tripRows, error: tripError } = await client()
-    .from('trips')
-    .select('*')
-    .order('start_date', { ascending: false });
-  fail(tripError);
-  const trips = (tripRows ?? []).map(mapTrip);
-  const tripIds = trips.map((trip) => trip.id);
-  if (!tripIds.length) return { trips: [], members: [], expenses: [], itineraryItems: [] };
+async function fetchTripChildren(tripIds: string[]): Promise<Omit<RemoteSnapshot, 'trips'>> {
   const [
     { data: memberRows, error: memberError },
     { data: expenseRows, error: expenseError },
     { data: itineraryRows, error: itineraryError },
+    { data: settlementRows, error: settlementError },
   ] = await Promise.all([
     client().from('trip_members').select('*').in('trip_id', tripIds),
     client().from('expenses').select('*').in('trip_id', tripIds),
     client().from('itinerary_items').select('*').in('trip_id', tripIds),
+    client().from('settlements').select('*').in('trip_id', tripIds),
   ]);
   fail(memberError);
   fail(expenseError);
   fail(itineraryError);
+  fail(settlementError);
   const expenseIds = (expenseRows ?? []).map((expense) => expense.id);
   let splitRows: SplitRow[] = [];
   if (expenseIds.length) {
@@ -121,11 +138,37 @@ export async function fetchRemoteSnapshot(): Promise<RemoteSnapshot> {
     splitRows = data ?? [];
   }
   return {
-    trips,
     members: (memberRows ?? []).map(mapMember),
     expenses: (expenseRows ?? []).map((row) => mapExpense(row, splitRows)),
     itineraryItems: (itineraryRows ?? []).map(mapItinerary),
+    settlements: (settlementRows ?? []).map(mapSettlement),
   };
+}
+
+export async function fetchRemoteSnapshot(): Promise<RemoteSnapshot> {
+  const { data: tripRows, error: tripError } = await client()
+    .from('trips')
+    .select('*')
+    .order('start_date', { ascending: false });
+  fail(tripError);
+  const trips = (tripRows ?? []).map(mapTrip);
+  const tripIds = trips.map((trip) => trip.id);
+  if (!tripIds.length)
+    return { trips: [], members: [], expenses: [], itineraryItems: [], settlements: [] };
+  return { trips, ...(await fetchTripChildren(tripIds)) };
+}
+
+/** Loads one trip; `trips` is empty when the trip was deleted or access was revoked. */
+export async function fetchRemoteTripSnapshot(tripId: string): Promise<RemoteSnapshot> {
+  const { data: tripRows, error: tripError } = await client()
+    .from('trips')
+    .select('*')
+    .eq('id', tripId);
+  fail(tripError);
+  const trips = (tripRows ?? []).map(mapTrip);
+  if (!trips.length)
+    return { trips: [], members: [], expenses: [], itineraryItems: [], settlements: [] };
+  return { trips, ...(await fetchTripChildren([tripId])) };
 }
 
 export async function createRemoteTrip(
@@ -298,5 +341,74 @@ export async function updateRemoteItinerary(
 }
 export async function deleteRemoteItinerary(itemId: string): Promise<void> {
   const { error } = await client().from('itinerary_items').delete().eq('id', itemId);
+  fail(error);
+}
+export async function recordRemoteSettlement(settlement: Settlement): Promise<void> {
+  const { error } = await client().from('settlements').insert({
+    id: settlement.id,
+    trip_id: settlement.tripId,
+    from_member_id: settlement.fromMemberId,
+    to_member_id: settlement.toMemberId,
+    amount_minor: settlement.amountMinor,
+    currency: settlement.currency,
+    status: settlement.status,
+    paid_at: settlement.paidAt,
+  });
+  fail(error);
+}
+export async function deleteRemoteSettlement(settlementId: string): Promise<void> {
+  const { error } = await client().from('settlements').delete().eq('id', settlementId);
+  fail(error);
+}
+export async function createRemoteInvite(
+  tripId: string,
+  role: TripInvite['role'],
+): Promise<TripInvite> {
+  const { data, error } = await client().rpc('create_trip_invite', {
+    p_trip_id: tripId,
+    p_role: role,
+  });
+  fail(error);
+  const row = data?.[0];
+  if (!row) throw new Error('INVITE_NOT_ALLOWED');
+  return { code: row.code, tripId, role, expiresAt: row.expires_at };
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+export function parseInvitePreview(value: unknown): InvitePreview {
+  if (!isRecord(value)) throw new Error('INVITE_NOT_FOUND');
+  const role = value.role === 'viewer' ? 'viewer' : 'editor';
+  const members = Array.isArray(value.unclaimed_members) ? value.unclaimed_members : [];
+  return {
+    tripId: String(value.trip_id),
+    tripTitle: String(value.trip_title ?? ''),
+    destination: String(value.destination ?? ''),
+    coverEmoji: String(value.cover_emoji ?? '✈️'),
+    role,
+    alreadyMember: value.already_member === true,
+    unclaimedMembers: members
+      .filter(isRecord)
+      .map((member) => ({ id: String(member.id), displayName: String(member.display_name) })),
+  };
+}
+
+export async function previewRemoteInvite(code: string): Promise<InvitePreview> {
+  const { data, error } = await client().rpc('get_invite_preview', { p_code: code });
+  fail(error);
+  return parseInvitePreview(data);
+}
+export async function acceptRemoteInvite(code: string, memberId: string | null): Promise<string> {
+  const { data, error } = await client().rpc('accept_trip_invite', {
+    p_code: code,
+    p_member_id: memberId,
+  });
+  fail(error);
+  if (!data) throw new Error('INVITE_NOT_FOUND');
+  return data;
+}
+export async function leaveRemoteTrip(tripId: string): Promise<void> {
+  const { error } = await client().rpc('leave_trip', { p_trip_id: tripId });
   fail(error);
 }

@@ -9,6 +9,7 @@ import { TripDataErrorScreen, TripDataLoadingScreen } from '@/features/data/trip
 import { spacing } from '@/theme/theme';
 import { useAppTheme } from '@/theme/use-app-theme';
 import { formatDateOnly } from '@/utils/dates/format';
+import { ViewerNotice } from '@/features/trips/viewer-notice';
 import { useState } from 'react';
 
 export function ExpensesScreen() {
@@ -23,6 +24,7 @@ export function ExpensesScreen() {
     .sort((a, b) => b.expenseDate.localeCompare(a.expenseDate));
   const members = data.members.filter((member) => member.tripId === tripId);
   const remove = data.deleteExpense;
+  const canEdit = data.myRole(tripId) !== 'viewer';
   const confirm = (id: string, title: string) =>
     Alert.alert(t('common.delete'), title, [
       { text: t('common.cancel'), style: 'cancel' },
@@ -42,17 +44,23 @@ export function ExpensesScreen() {
   if (data.error) return <TripDataErrorScreen onRetry={() => void data.refetch()} />;
   return (
     <Screen>
-      <Button
-        label={t('expenses.add')}
-        icon="plus"
-        onPress={() => router.push(`/trip/${tripId}/expenses/new` as never)}
-      />
+      {canEdit ? (
+        <Button
+          label={t('expenses.add')}
+          icon="plus"
+          onPress={() => router.push(`/trip/${tripId}/expenses/new` as never)}
+        />
+      ) : (
+        <ViewerNotice />
+      )}
       {expenses.length === 0 ? (
         <EmptyState
           title={t('expenses.emptyTitle')}
           description={t('expenses.emptyDescription')}
-          actionLabel={t('expenses.add')}
-          onAction={() => router.push(`/trip/${tripId}/expenses/new` as never)}
+          actionLabel={canEdit ? t('expenses.add') : undefined}
+          onAction={
+            canEdit ? () => router.push(`/trip/${tripId}/expenses/new` as never) : undefined
+          }
         />
       ) : (
         expenses.map((expense, index) => {
@@ -66,7 +74,8 @@ export function ExpensesScreen() {
           return (
             <Pressable
               key={expense.id}
-              disabled={deletingId !== null}
+              accessibilityRole={canEdit ? 'button' : undefined}
+              disabled={deletingId !== null || !canEdit}
               onPress={() => router.push(`/trip/${tripId}/expenses/${expense.id}` as never)}
             >
               <Card style={{ backgroundColor: palette.background, boxShadow: 'none' }}>
@@ -104,27 +113,30 @@ export function ExpensesScreen() {
                       {t(`expenses.categories.${expense.category}`)}
                     </AppText>
                   </View>
-                  <Pressable
-                    accessibilityLabel={t('common.delete')}
-                    hitSlop={8}
-                    disabled={deletingId !== null}
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      confirm(expense.id, expense.title);
-                    }}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name="trash-can-outline"
-                      size={21}
-                      color={deletingId === expense.id ? colors.textMuted : colors.danger}
-                    />
-                  </Pressable>
+                  {canEdit ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('common.delete')}
+                      hitSlop={8}
+                      disabled={deletingId !== null}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        confirm(expense.id, expense.title);
+                      }}
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialCommunityIcons
+                        name="trash-can-outline"
+                        size={21}
+                        color={deletingId === expense.id ? colors.textMuted : colors.danger}
+                      />
+                    </Pressable>
+                  ) : null}
                 </View>
               </Card>
             </Pressable>

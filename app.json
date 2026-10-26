@@ -2,7 +2,7 @@
   "expo": {
     "name": "TripWise",
     "slug": "tripwise",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/brand/tripwise-icon.png",
     "scheme": "tripwise",
@@ -39,7 +39,11 @@
       ],
       "expo-sqlite",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-sharing",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

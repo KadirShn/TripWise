@@ -15,6 +15,8 @@ const emptyState = {
   members: [],
   expenses: [],
   itineraryItems: [],
+  settlements: [],
+  pendingInviteCode: null,
 };
 
 describe('persisted guest state', () => {
