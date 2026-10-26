@@ -1,0 +1,41 @@
+name: Supabase keep-alive
+
+# Free-plan Supabase projects pause after about a week without database activity, which
+# takes account sign-in and sync offline for every app user. This job runs one tiny,
+# RLS-filtered REST query every three days so the project keeps counting as active.
+
+on:
+  schedule:
+    - cron: '17 6 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Query the database through the REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY as repository secrets."
+            exit 1
+          fi
+          # Anonymous requests see no rows because of RLS, but the query still reaches Postgres.
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --retry 3 --retry-delay 10 --max-time 30 \
+            "${SUPABASE_URL%/}/rest/v1/trips?select=id&limit=1" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY")
+          echo "Supabase responded with HTTP $status"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Supabase did not answer the keep-alive query. The project may be paused; resume it from the dashboard."
+            exit 1
+          fi
