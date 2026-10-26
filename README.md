@@ -201,7 +201,7 @@ Test; özel gezilerin hesaplar arasında sızmadığını, üye rollerini ve ba�
 npx expo-doctor
 pnpm run lint
 pnpm run typecheck
-pnpm test -- --runInBand
+pnpm test --runInBand
 pnpm run format:check
 ```
 

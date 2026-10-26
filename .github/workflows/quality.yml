@@ -45,7 +45,7 @@ jobs:
         run: pnpm run typecheck
 
       - name: Test
-        run: pnpm test -- --runInBand
+        run: pnpm test --runInBand
 
       - name: Check formatting
         run: pnpm run format:check
