@@ -15,7 +15,7 @@
         "foregroundImage": "./assets/brand/tripwise-android-foreground.png",
         "monochromeImage": "./assets/brand/tripwise-android-monochrome.png"
       },
-      "predictiveBackGestureEnabled": true,
+      "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": []
     },

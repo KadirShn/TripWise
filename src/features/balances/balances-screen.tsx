@@ -140,7 +140,7 @@ export function BalancesScreen() {
                   ? t('balances.receives')
                   : balance.balanceMinor < 0
                     ? t('balances.owes')
-                    : t('balances.settled')}
+                    : t('balances.memberSettled')}
               </AppText>
             </View>
             <MoneyText

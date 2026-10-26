@@ -9,6 +9,7 @@
 • Yabancı para harcamalarında güncel kuru otomatik getir
 • Harcamaları CSV (Excel) veya PDF rapor olarak dışa aktar
 • Demo gezilerini hesabına taşı
+• Android 14 ve üzeri cihazlarda geri tuşunun uygulamayı kapatması düzeltildi
 • Küçük düzeltmeler ve iyileştirmeler
 </tr-TR>
 
@@ -21,5 +22,6 @@
 • Fetch the current exchange rate for foreign-currency expenses
 • Export expenses as CSV (Excel) or a PDF report
 • Move demo trips into your account
+• Fixed the back button closing the app on Android 14 and newer
 • Small fixes and improvements
 </en-US>
