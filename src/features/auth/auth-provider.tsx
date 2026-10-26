@@ -12,11 +12,20 @@ import {
   signUpWithEmail,
 } from './auth-service';
 import { parseAuthUrl, type AuthUrlTokens } from './auth-url';
+import {
+  decideSessionBootstrap,
+  loadSessionWithTimeout,
+  SESSION_BOOTSTRAP_TIMEOUT_MS,
+  shouldBlockOnSessionRestore,
+} from './session-bootstrap';
 
 type RecoveryStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface AuthContextValue {
   session: Session | null;
+  // Signed-in user id; falls back to the last known user while the session is being
+  // restored (e.g. offline with an expired access token) so cached data stays visible.
+  userId: string | null;
   isLoading: boolean;
   recoveryStatus: RecoveryStatus;
   signIn: (email: string, password: string) => Promise<void>;
@@ -35,31 +44,49 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setLoading] = useState(Boolean(supabase));
+  const [isLoading, setLoading] = useState(
+    () => Boolean(supabase) && shouldBlockOnSessionRestore(useAppStore.getState().mode),
+  );
   const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>('idle');
+  const mode = useAppStore((state) => state.mode);
+  const authUserId = useAppStore((state) => state.authUserId);
   const enterAuthenticated = useAppStore((state) => state.enterAuthenticated);
   const clearMode = useAppStore((state) => state.signOut);
+  const userId = session?.user.id ?? (mode === 'authenticated' ? authUserId : null);
 
   useEffect(() => {
     const client = supabase;
     if (!client) return;
-    void client.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (data.session) {
-        clearOtherUsersQueryCache(data.session.user.id);
-        enterAuthenticated();
-      } else if (useAppStore.getState().mode === 'authenticated') clearMode();
-      setLoading(false);
-    });
-    const { data } = client.auth.onAuthStateChange((event: AuthChangeEvent, nextSession) => {
+    const applySession = (nextSession: Session) => {
       setSession(nextSession);
+      clearOtherUsersQueryCache(nextSession.user.id);
+      enterAuthenticated(nextSession.user.id);
+    };
+    const cancelLoad = loadSessionWithTimeout(
+      () => client.auth.getSession(),
+      SESSION_BOOTSTRAP_TIMEOUT_MS,
+      (result) => {
+        const decision = decideSessionBootstrap(result);
+        if (decision.action === 'enterAuthenticated') applySession(decision.session);
+        else if (decision.action === 'signOut' && useAppStore.getState().mode === 'authenticated')
+          clearMode();
+        setLoading(false);
+      },
+    );
+    const { data } = client.auth.onAuthStateChange((event: AuthChangeEvent, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryStatus('ready');
-      if (nextSession) {
-        clearOtherUsersQueryCache(nextSession.user.id);
-        enterAuthenticated();
-      } else if (useAppStore.getState().mode === 'authenticated') clearMode();
+      if (nextSession) applySession(nextSession);
+      // INITIAL_SESSION is also null when an offline refresh fails, so only an explicit
+      // SIGNED_OUT ends the local account mode; the bootstrap decision covers the rest.
+      else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        if (useAppStore.getState().mode === 'authenticated') clearMode();
+      }
     });
-    return () => data.subscription.unsubscribe();
+    return () => {
+      cancelLoad();
+      data.subscription.unsubscribe();
+    };
   }, [clearMode, enterAuthenticated]);
 
   useEffect(() => {
@@ -101,6 +128,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
+      userId,
       isLoading,
       recoveryStatus,
       signIn: async (email, password) => {
@@ -125,24 +153,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setRecoveryStatus('idle');
       },
       signOut: async () => {
-        const userId = session?.user.id;
         const result = supabase ? await signOutSafely(supabase) : { remoteSignOutFailed: false };
-        clearRemoteQueryCache(userId);
+        clearRemoteQueryCache(userId ?? undefined);
         setSession(null);
         clearMode();
         return result;
       },
       deleteAccount: async () => {
         if (!supabase || !session) throw new Error('AUTH_REQUIRED');
-        const userId = session.user.id;
         await invokeDeleteAccount(supabase);
         await supabase.auth.signOut({ scope: 'local' });
-        clearRemoteQueryCache(userId);
+        clearRemoteQueryCache(session.user.id);
         setSession(null);
         clearMode();
       },
     }),
-    [clearMode, isLoading, recoveryStatus, session],
+    [clearMode, isLoading, recoveryStatus, session, userId],
   );
   return <AuthContext value={value}>{children}</AuthContext>;
 }

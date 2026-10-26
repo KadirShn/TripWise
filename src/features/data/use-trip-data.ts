@@ -62,8 +62,9 @@ const requireAccount = (mode: string) => {
 
 export function useTripData() {
   const mode = useAppStore((state) => state.mode);
-  const { session } = useAuth();
-  const userId = session?.user.id;
+  const auth = useAuth();
+  const userId = auth.userId ?? undefined;
+  const hasSession = Boolean(auth.session);
   const queryKey = remoteSnapshotQueryKey(userId ?? 'signed-out');
   const local: RemoteSnapshot = {
     trips: useAppStore((state) => state.trips),
@@ -92,8 +93,15 @@ export function useTripData() {
   const query = useQuery({
     queryKey,
     queryFn: fetchRemoteSnapshot,
-    enabled: mode === 'authenticated' && Boolean(userId),
+    // Without a live session the request would run unauthenticated and RLS would
+    // return an empty snapshot over the cached one, so wait for the session refresh.
+    enabled: mode === 'authenticated' && Boolean(userId) && hasSession,
   });
+  // Server writes need a restored session as well as connectivity.
+  const ensureRemoteReady = async () => {
+    if (!hasSession) throw new TripDataError('OFFLINE_MUTATION_DISABLED');
+    await ensureOnline();
+  };
   const data = mode === 'authenticated' ? normalizeSnapshot(query.data ?? emptySnapshot) : local;
   const tripIdOf = (items: { id: Id; tripId: Id }[], id: Id) =>
     items.find((item) => item.id === id)?.tripId;
@@ -131,7 +139,7 @@ export function useTripData() {
     myRole,
     createTrip: async (input: NewTrip): Promise<Id> => {
       if (mode !== 'authenticated') return localActions.createTrip(input);
-      await ensureOnline();
+      await ensureRemoteReady();
       const id = randomUUID();
       const timestamp = now();
       const trip: Trip = {
@@ -156,26 +164,26 @@ export function useTripData() {
     },
     updateTrip: async (tripId: Id, update: Partial<NewTrip>) => {
       if (mode !== 'authenticated') return localActions.updateTrip(tripId, update);
-      await ensureOnline();
+      await ensureRemoteReady();
       await updateRemoteTrip(tripId, update);
       await refreshTrip(tripId);
     },
     deleteTrip: async (tripId: Id) => {
       if (mode !== 'authenticated') return localActions.deleteTrip(tripId);
-      await ensureOnline();
+      await ensureRemoteReady();
       await deleteRemoteTrip(tripId);
       await refreshTrip(tripId);
     },
     addMember: async (input: NewMember): Promise<Id> => {
       if (mode !== 'authenticated') return localActions.addMember(input);
-      await ensureOnline();
+      await ensureRemoteReady();
       const member = await addRemoteMember({ ...input, id: randomUUID(), createdAt: now() });
       await refreshTrip(input.tripId);
       return member.id;
     },
     updateMember: async (memberId: Id, update: Partial<NewMember>) => {
       if (mode !== 'authenticated') return localActions.updateMember(memberId, update);
-      await ensureOnline();
+      await ensureRemoteReady();
       await updateRemoteMember(memberId, update);
       await refreshTrip(tripIdOf(data.members, memberId));
     },
@@ -193,27 +201,27 @@ export function useTripData() {
       )
         throw new Error('MEMBER_IN_USE');
       if (mode !== 'authenticated') return localActions.deleteMember(memberId);
-      await ensureOnline();
+      await ensureRemoteReady();
       const tripId = tripIdOf(data.members, memberId);
       await deleteRemoteMember(memberId);
       await refreshTrip(tripId);
     },
     upsertExpense: async (expense: Expense) => {
       if (mode !== 'authenticated') return localActions.upsertExpense(expense);
-      await ensureOnline();
+      await ensureRemoteReady();
       await upsertRemoteExpense(expense);
       await refreshTrip(expense.tripId);
     },
     deleteExpense: async (expenseId: Id) => {
       if (mode !== 'authenticated') return localActions.deleteExpense(expenseId);
-      await ensureOnline();
+      await ensureRemoteReady();
       const tripId = tripIdOf(data.expenses, expenseId);
       await deleteRemoteExpense(expenseId);
       await refreshTrip(tripId);
     },
     addItineraryItem: async (input: NewItinerary): Promise<Id> => {
       if (mode !== 'authenticated') return localActions.addItineraryItem(input);
-      await ensureOnline();
+      await ensureRemoteReady();
       const id = randomUUID();
       const timestamp = now();
       await addRemoteItinerary({ ...input, id, createdAt: timestamp, updatedAt: timestamp });
@@ -222,20 +230,20 @@ export function useTripData() {
     },
     updateItineraryItem: async (itemId: Id, update: Partial<NewItinerary>) => {
       if (mode !== 'authenticated') return localActions.updateItineraryItem(itemId, update);
-      await ensureOnline();
+      await ensureRemoteReady();
       await updateRemoteItinerary(itemId, update);
       await refreshTrip(tripIdOf(data.itineraryItems, itemId));
     },
     deleteItineraryItem: async (itemId: Id) => {
       if (mode !== 'authenticated') return localActions.deleteItineraryItem(itemId);
-      await ensureOnline();
+      await ensureRemoteReady();
       const tripId = tripIdOf(data.itineraryItems, itemId);
       await deleteRemoteItinerary(itemId);
       await refreshTrip(tripId);
     },
     recordSettlement: async (input: NewSettlement): Promise<Id> => {
       if (mode !== 'authenticated') return localActions.recordSettlement(input);
-      await ensureOnline();
+      await ensureRemoteReady();
       const id = randomUUID();
       const timestamp = now();
       await recordRemoteSettlement({
@@ -250,31 +258,31 @@ export function useTripData() {
     },
     deleteSettlement: async (settlementId: Id) => {
       if (mode !== 'authenticated') return localActions.deleteSettlement(settlementId);
-      await ensureOnline();
+      await ensureRemoteReady();
       const tripId = tripIdOf(data.settlements, settlementId);
       await deleteRemoteSettlement(settlementId);
       await refreshTrip(tripId);
     },
     createInvite: async (tripId: Id, role: TripInvite['role']): Promise<TripInvite> => {
       requireAccount(mode);
-      await ensureOnline();
+      await ensureRemoteReady();
       return createRemoteInvite(tripId, role);
     },
     previewInvite: async (code: string): Promise<InvitePreview> => {
       requireAccount(mode);
-      await ensureOnline();
+      await ensureRemoteReady();
       return previewRemoteInvite(code);
     },
     acceptInvite: async (code: string, memberId: Id | null): Promise<Id> => {
       requireAccount(mode);
-      await ensureOnline();
+      await ensureRemoteReady();
       const tripId = await acceptRemoteInvite(code, memberId);
       await refreshTrip(tripId);
       return tripId;
     },
     leaveTrip: async (tripId: Id) => {
       requireAccount(mode);
-      await ensureOnline();
+      await ensureRemoteReady();
       await leaveRemoteTrip(tripId);
       await refreshTrip(tripId);
     },
@@ -282,7 +290,7 @@ export function useTripData() {
     guestTrips: mode === 'authenticated' ? local.trips : [],
     importGuestTrips: async (): Promise<number> => {
       requireAccount(mode);
-      await ensureOnline();
+      await ensureRemoteReady();
       let imported = 0;
       try {
         for (const localTrip of local.trips) {

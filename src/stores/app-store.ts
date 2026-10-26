@@ -13,7 +13,7 @@ import type { Expense, Id, ItineraryItem, Settlement, Trip, TripMember } from '@
 import type { ThemePreference } from '@/theme/theme';
 import { appLocalStorage } from '@/lib/storage/local-storage';
 
-type AppMode = 'none' | 'guest' | 'authenticated';
+export type AppMode = 'none' | 'guest' | 'authenticated';
 export type AppLanguage = 'tr' | 'en';
 type NewTrip = Omit<Trip, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>;
 type NewMember = Omit<TripMember, 'id' | 'createdAt'>;
@@ -24,6 +24,9 @@ interface AppState {
   hasHydrated: boolean;
   onboardingCompleted: boolean;
   mode: AppMode;
+  // Last signed-in user, kept so cached trips stay keyed correctly while the session
+  // cannot be refreshed (for example when launching offline with an expired token).
+  authUserId: string | null;
   themePreference: ThemePreference;
   language: AppLanguage;
   trips: Trip[];
@@ -36,7 +39,7 @@ interface AppState {
   setHasHydrated: (value: boolean) => void;
   completeOnboarding: () => void;
   enterGuest: () => void;
-  enterAuthenticated: () => void;
+  enterAuthenticated: (userId: string) => void;
   signOut: () => void;
   setThemePreference: (value: ThemePreference) => void;
   setLanguage: (value: AppLanguage) => void;
@@ -82,6 +85,7 @@ export const useAppStore = create<AppState>()(
       hasHydrated: false,
       onboardingCompleted: false,
       mode: 'none',
+      authUserId: null,
       themePreference: 'system',
       language: 'tr',
       trips: [],
@@ -94,10 +98,12 @@ export const useAppStore = create<AppState>()(
       setHasHydrated: (value) => set({ hasHydrated: value }),
       completeOnboarding: () => set({ onboardingCompleted: true }),
       enterGuest: () => set((state) => ({ mode: 'guest', ...(state.trips.length ? {} : seed()) })),
-      enterAuthenticated: () => set({ mode: 'authenticated' }),
+      enterAuthenticated: (authUserId) => set({ mode: 'authenticated', authUserId }),
       signOut: () =>
         set((state) =>
-          state.mode === 'authenticated' ? { mode: 'none', ...emptyTrips } : { mode: 'none' },
+          state.mode === 'authenticated'
+            ? { mode: 'none', authUserId: null, ...emptyTrips }
+            : { mode: 'none', authUserId: null },
         ),
       setThemePreference: (themePreference) => set({ themePreference }),
       setLanguage: (language) => set({ language }),
